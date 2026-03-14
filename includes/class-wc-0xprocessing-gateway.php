@@ -54,6 +54,70 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
         add_action('woocommerce_order_details_after_order_table', array($this, 'display_payment_status'), 10);
+
+        // Admin notice for incomplete configuration
+        add_action('admin_notices', array($this, 'configuration_notice'));
+    }
+
+    // ------------------------------------------------------------------
+    //  Availability guard
+    // ------------------------------------------------------------------
+
+    /**
+     * Only show the gateway on checkout when all required settings are configured.
+     *
+     * @return bool
+     */
+    public function is_available() {
+        if (!parent::is_available()) {
+            return false;
+        }
+
+        // Require Merchant ID, API Key, and Webhook Password
+        if (empty($this->get_option('merchant_id'))
+            || empty($this->get_option('api_key'))
+            || empty($this->get_option('webhook_password'))
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Show admin notice when the gateway is enabled but not fully configured.
+     */
+    public function configuration_notice() {
+        if ($this->enabled !== 'yes') {
+            return;
+        }
+
+        $missing = array();
+        if (empty($this->get_option('merchant_id'))) {
+            $missing[] = __('Merchant ID', 'wc-0xprocessing');
+        }
+        if (empty($this->get_option('api_key'))) {
+            $missing[] = __('API Key', 'wc-0xprocessing');
+        }
+        if (empty($this->get_option('webhook_password'))) {
+            $missing[] = __('Webhook Password', 'wc-0xprocessing');
+        }
+
+        if (empty($missing)) {
+            return;
+        }
+
+        $url = admin_url('admin.php?page=wc-settings&tab=checkout&section=oxprocessing');
+        echo '<div class="notice notice-error"><p>';
+        echo '<strong>' . esc_html__('0xProcessing Crypto', 'wc-0xprocessing') . ':</strong> ';
+        echo sprintf(
+            /* translators: %1$s: comma-separated list of missing fields, %2$s: opening link tag, %3$s: closing link tag */
+            esc_html__('The gateway is enabled but will not appear at checkout until you configure: %1$s. %2$sConfigure now%3$s', 'wc-0xprocessing'),
+            '<strong>' . esc_html(implode(', ', $missing)) . '</strong>',
+            '<a href="' . esc_url($url) . '">',
+            '</a>'
+        );
+        echo '</p></div>';
     }
 
     // ------------------------------------------------------------------
