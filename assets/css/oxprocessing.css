@@ -1,0 +1,544 @@
+/**
+ * 0xProcessing for WooCommerce — Frontend Styles
+ *
+ * All colors are configurable via CSS custom properties (--oxp-*).
+ * Override them in your theme's stylesheet to match your brand.
+ *
+ * @package WC_0xProcessing
+ */
+
+/* ==========================================================================
+   1. CSS CUSTOM PROPERTIES
+   ========================================================================== */
+
+:root {
+    --oxp-accent: #4a6cf7;
+    --oxp-accent-hover: #3b5de7;
+    --oxp-accent-rgb: 74, 108, 247;
+    --oxp-text: #333333;
+    --oxp-text-light: #666666;
+    --oxp-text-muted: #999999;
+    --oxp-bg: #ffffff;
+    --oxp-bg-alt: #f8f9fa;
+    --oxp-bg-input: #ffffff;
+    --oxp-border: #e0e0e0;
+    --oxp-border-focus: var(--oxp-accent);
+    --oxp-radius: 8px;
+    --oxp-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --oxp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --oxp-status-success: #22c55e;
+    --oxp-status-warning: #f59e0b;
+    --oxp-status-error: #ef4444;
+    --oxp-status-info: #6b7280;
+    --oxp-transition: 0.2s ease;
+}
+
+/* ==========================================================================
+   2. CURRENCY SELECTOR CONTAINER
+   ========================================================================== */
+
+.payment_method_oxprocessing .oxprocessing-currency-selector {
+    margin: 15px 0;
+    padding: 20px;
+    background: var(--oxp-bg-alt);
+    border: 1px solid var(--oxp-border);
+    border-radius: var(--oxp-radius);
+}
+
+.payment_method_oxprocessing .oxprocessing-currency-selector label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--oxp-accent);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment_method_oxprocessing .oxprocessing-currency-selector .description {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--oxp-text-muted);
+}
+
+/* ==========================================================================
+   3. SELECT2 CONTAINER (CLOSED STATE)
+   ========================================================================== */
+
+.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection--single {
+    background: var(--oxp-bg-input);
+    border: 1px solid var(--oxp-border);
+    height: 48px;
+    border-radius: var(--oxp-radius);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    transition: border-color var(--oxp-transition), box-shadow var(--oxp-transition);
+}
+
+/* Focus / Open state — accent ring */
+.payment_method_oxprocessing .oxprocessing-select2-container.select2-container--focus .select2-selection--single,
+.payment_method_oxprocessing .oxprocessing-select2-container.select2-container--open .select2-selection--single {
+    border-color: var(--oxp-border-focus);
+    box-shadow: 0 0 0 3px rgba(var(--oxp-accent-rgb), 0.15);
+}
+
+/* Selected text */
+.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__rendered {
+    color: var(--oxp-text);
+    font-weight: 500;
+    line-height: 46px;
+    padding-left: 0;
+}
+
+/* Placeholder text */
+.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__placeholder {
+    color: var(--oxp-text-muted);
+}
+
+/* Dropdown arrow */
+.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__arrow {
+    height: 46px;
+    right: 10px;
+}
+
+.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__arrow b {
+    border-color: var(--oxp-text-muted) transparent transparent transparent;
+    border-width: 5px 4px 0 4px;
+}
+
+.payment_method_oxprocessing .oxprocessing-select2-container.select2-container--open .select2-selection__arrow b {
+    border-color: transparent transparent var(--oxp-text-muted) transparent;
+    border-width: 0 4px 5px 4px;
+}
+
+/* Width — scoped to our container */
+.payment_method_oxprocessing .oxprocessing-select2-container {
+    width: 100%;
+}
+
+/* ==========================================================================
+   4. SELECT2 DROPDOWN PANEL (OPEN STATE)
+   ========================================================================== */
+
+.oxprocessing-select2-dropdown {
+    background: var(--oxp-bg);
+    border: 1px solid var(--oxp-border);
+    border-radius: var(--oxp-radius);
+    box-shadow: var(--oxp-shadow-lg);
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   5. SEARCH FIELD INSIDE DROPDOWN
+   ========================================================================== */
+
+.oxprocessing-select2-dropdown .select2-search--dropdown {
+    padding: 12px;
+    background: transparent;
+}
+
+.oxprocessing-select2-dropdown .select2-search--dropdown .select2-search__field {
+    background: var(--oxp-bg-input);
+    border: 1px solid var(--oxp-border);
+    color: var(--oxp-text);
+    border-radius: calc(var(--oxp-radius) - 2px);
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 100%;
+    transition: border-color var(--oxp-transition), box-shadow var(--oxp-transition);
+}
+
+.oxprocessing-select2-dropdown .select2-search__field:focus {
+    border-color: var(--oxp-border-focus);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--oxp-accent-rgb), 0.12);
+}
+
+.oxprocessing-select2-dropdown .select2-search__field::placeholder {
+    color: var(--oxp-text-muted);
+}
+
+/* ==========================================================================
+   6. OPTIONS / RESULTS LIST
+   ========================================================================== */
+
+.oxprocessing-select2-dropdown .select2-results {
+    background: transparent;
+}
+
+.oxprocessing-select2-dropdown .select2-results__option {
+    background: transparent;
+    color: var(--oxp-text);
+    padding: 12px 14px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--oxp-border);
+    transition: background var(--oxp-transition), color var(--oxp-transition);
+}
+
+.oxprocessing-select2-dropdown .select2-results__option:last-child {
+    border-bottom: none;
+}
+
+/* Hover state */
+.oxprocessing-select2-dropdown .select2-results__option--highlighted {
+    background: rgba(var(--oxp-accent-rgb), 0.08);
+    color: var(--oxp-text);
+}
+
+/* Selected state — solid accent */
+.oxprocessing-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background: var(--oxp-accent);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   7. CURRENCY OPTION FORMATTING
+   ========================================================================== */
+
+.oxprocessing-currency-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.oxprocessing-currency-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--oxp-accent) 0%, var(--oxp-accent-hover) 100%);
+    color: #ffffff;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.oxprocessing-currency-icon-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--oxp-accent) 0%, var(--oxp-accent-hover) 100%);
+    color: #ffffff;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 9px;
+    margin-right: 8px;
+    vertical-align: middle;
+    text-transform: uppercase;
+}
+
+.oxprocessing-currency-name {
+    color: inherit;
+}
+
+/* ==========================================================================
+   8. TEST MODE NOTICE
+   ========================================================================== */
+
+.payment_method_oxprocessing .oxprocessing-test-mode-notice {
+    margin-top: 15px;
+    padding: 15px 20px;
+    background: rgba(var(--oxp-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--oxp-accent-rgb), 0.25);
+    border-left: 4px solid var(--oxp-status-warning);
+    border-radius: var(--oxp-radius);
+    color: var(--oxp-text);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.payment_method_oxprocessing .oxprocessing-test-mode-notice strong {
+    color: var(--oxp-status-warning);
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+/* ==========================================================================
+   9. WEBHOOK INFO (ADMIN ONLY)
+   ========================================================================== */
+
+.payment_method_oxprocessing .oxprocessing-webhook-info {
+    margin-top: 15px;
+    padding: 15px 20px;
+    background: var(--oxp-bg-alt);
+    border: 1px solid var(--oxp-border);
+    border-radius: var(--oxp-radius);
+    font-size: 12px;
+    color: var(--oxp-text-light);
+}
+
+.payment_method_oxprocessing .oxprocessing-webhook-info strong {
+    color: var(--oxp-accent);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.payment_method_oxprocessing .oxprocessing-webhook-info code {
+    display: block;
+    padding: 8px 12px;
+    margin: 8px 0;
+    background: var(--oxp-bg);
+    border: 1px solid var(--oxp-border);
+    border-radius: calc(var(--oxp-radius) - 4px);
+    word-break: break-all;
+    color: var(--oxp-text);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+}
+
+/* ==========================================================================
+   10. PAYMENT METHOD BOX
+   ========================================================================== */
+
+.payment_method_oxprocessing {
+    position: relative;
+}
+
+.payment_method_oxprocessing .payment_box {
+    padding: 20px;
+    background: transparent;
+    border: 1px solid var(--oxp-border);
+    border-radius: var(--oxp-radius);
+    margin-top: 10px;
+}
+
+/* Payment method label */
+.wc_payment_method.payment_method_oxprocessing label {
+    color: inherit;
+    font-weight: 600;
+}
+
+.wc_payment_method.payment_method_oxprocessing input[type="radio"]:checked + label {
+    color: var(--oxp-accent);
+}
+
+/* ==========================================================================
+   11. RECEIPT PAGE
+   ========================================================================== */
+
+.oxprocessing-receipt {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px;
+    background: var(--oxp-bg);
+    border: 1px solid var(--oxp-border);
+    border-radius: var(--oxp-radius);
+    box-shadow: var(--oxp-shadow);
+    text-align: center;
+}
+
+.oxprocessing-receipt h2 {
+    margin-bottom: 20px;
+    color: var(--oxp-accent);
+}
+
+.oxprocessing-receipt p {
+    margin-bottom: 15px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--oxp-text-light);
+}
+
+.oxprocessing-receipt .button,
+.oxprocessing-receipt a {
+    margin-top: 20px;
+    padding: 15px 35px;
+    font-size: 16px;
+    background: var(--oxp-accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--oxp-radius);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: background var(--oxp-transition), transform var(--oxp-transition), box-shadow var(--oxp-transition);
+}
+
+.oxprocessing-receipt .button:hover,
+.oxprocessing-receipt a:hover {
+    background: var(--oxp-accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--oxp-accent-rgb), 0.3);
+}
+
+/* ==========================================================================
+   12. PAYMENT STATUS BANNERS
+   ========================================================================== */
+
+/*
+ * Soft, theme-neutral tinted backgrounds.
+ * Each status uses a left-border accent for quick visual scanning.
+ */
+
+.oxprocessing-status-pending,
+.oxprocessing-status-completed,
+.oxprocessing-status-failed,
+.oxprocessing-status-cancelled {
+    padding: 20px 25px;
+    border-radius: var(--oxp-radius);
+    line-height: 1.6;
+}
+
+/* — Pending: amber tint */
+.payment_method_oxprocessing ~ .oxprocessing-status-pending,
+.oxprocessing-status-pending {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-left: 4px solid var(--oxp-status-warning);
+}
+
+.oxprocessing-status-pending p {
+    margin: 10px 0;
+    color: var(--oxp-text-light);
+}
+
+.oxprocessing-status-pending strong {
+    color: var(--oxp-status-warning);
+    font-size: 16px;
+}
+
+/* — Completed / Success: green tint */
+.payment_method_oxprocessing ~ .oxprocessing-status-completed,
+.oxprocessing-status-completed {
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-left: 4px solid var(--oxp-status-success);
+}
+
+.oxprocessing-status-completed p {
+    margin: 10px 0;
+    color: var(--oxp-text-light);
+}
+
+.oxprocessing-status-completed strong {
+    color: var(--oxp-status-success);
+    font-size: 16px;
+}
+
+/* — Failed: red tint */
+.payment_method_oxprocessing ~ .oxprocessing-status-failed,
+.oxprocessing-status-failed {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-left: 4px solid var(--oxp-status-error);
+}
+
+.oxprocessing-status-failed p {
+    margin: 10px 0;
+    color: var(--oxp-text-light);
+}
+
+.oxprocessing-status-failed strong {
+    color: var(--oxp-status-error);
+    font-size: 16px;
+}
+
+/* — Cancelled: gray tint */
+.payment_method_oxprocessing ~ .oxprocessing-status-cancelled,
+.oxprocessing-status-cancelled {
+    background: rgba(107, 114, 128, 0.08);
+    border: 1px solid rgba(107, 114, 128, 0.25);
+    border-left: 4px solid var(--oxp-status-info);
+}
+
+.oxprocessing-status-cancelled p {
+    margin: 10px 0;
+    color: var(--oxp-text-light);
+}
+
+.oxprocessing-status-cancelled strong {
+    color: var(--oxp-status-info);
+    font-size: 16px;
+}
+
+/* Payment ID — monospace, subdued */
+.oxprocessing-payment-id {
+    opacity: 0.7;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--oxp-text-muted);
+}
+
+/* ==========================================================================
+   13. LOADING SPINNER
+   ========================================================================== */
+
+.oxprocessing-loading {
+    position: relative;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.oxprocessing-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    border: 3px solid var(--oxp-border);
+    border-top-color: var(--oxp-accent);
+    border-radius: 50%;
+    animation: oxprocessing-spin 0.8s linear infinite;
+}
+
+@keyframes oxprocessing-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================================================
+   14. RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media screen and (max-width: 768px) {
+    .payment_method_oxprocessing .oxprocessing-currency-selector {
+        padding: 15px;
+    }
+
+    .oxprocessing-receipt {
+        padding: 25px;
+    }
+
+    .payment_method_oxprocessing .oxprocessing-webhook-info {
+        font-size: 11px;
+    }
+
+    .payment_method_oxprocessing .oxprocessing-select2-container .select2-selection--single {
+        height: 44px;
+    }
+
+    .payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__rendered {
+        line-height: 42px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .oxprocessing-currency-option {
+        gap: 8px;
+    }
+
+    .oxprocessing-currency-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 10px;
+    }
+
+    .oxprocessing-status-pending,
+    .oxprocessing-status-completed,
+    .oxprocessing-status-failed,
+    .oxprocessing-status-cancelled {
+        padding: 15px 18px;
+    }
+}

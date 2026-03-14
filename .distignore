@@ -1,0 +1,13 @@
+/.git
+/.github
+/.gitignore
+/.distignore
+/.editorconfig
+/docs
+/node_modules
+/vendor
+/tests
+*.log
+*.cache
+.DS_Store
+CONTRIBUTING.md
