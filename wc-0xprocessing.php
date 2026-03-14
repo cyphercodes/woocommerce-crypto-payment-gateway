@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: 0xProcessing for WooCommerce
- * Plugin URI: https://0xprocessing.com
+ * Plugin URI: https://github.com/cyphercodes/woocommerce-crypto-payment-gateway
  * Description: Accept cryptocurrency payments via 0xProcessing in your WooCommerce store
  * Version: 1.0.0
  * Author: Rayan Salhab
