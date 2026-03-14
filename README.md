@@ -29,11 +29,28 @@ Accept **Bitcoin, Ethereum, USDT, and 50+ cryptocurrency payments** in your WooC
 
 ## 🚀 Installation
 
-### Step 1: Upload Plugin
+### Option A: Download from GitHub (recommended)
+
+1. Go to the [Releases](https://github.com/cyphercodes/woocommerce-crypto-payment-gateway/releases) page
+2. Download the latest `.zip` file
+3. In WordPress, go to **Plugins → Add New → Upload Plugin**
+4. Upload the ZIP file and click **Install Now**
+5. Click **Activate**
+
+### Option B: Install via Git
+
+```bash
+cd /path/to/your/wordpress/wp-content/plugins/
+git clone https://github.com/cyphercodes/woocommerce-crypto-payment-gateway.git wc-0xprocessing
+```
+
+Then activate the plugin in **Plugins → Installed Plugins**.
+
+### Option C: Manual Upload
 
 1. Download or clone this repository
-2. Upload the `wc-0xprocessing` folder to `/wp-content/plugins/`
-3. Activate the plugin through the 'Plugins' menu in WordPress
+2. Copy the plugin folder to `/wp-content/plugins/wc-0xprocessing/`
+3. Activate through the **Plugins** menu in WordPress
 
 ### Step 2: Configure 0xProcessing Account
 

@@ -93,9 +93,6 @@ class WC_0xProcessing_Main {
 
         // Add settings link on plugins page
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_settings_link'));
-
-        // Warn admin if webhook password is not set
-        add_action('admin_notices', array($this, 'webhook_password_missing_notice'));
     }
 
     /**

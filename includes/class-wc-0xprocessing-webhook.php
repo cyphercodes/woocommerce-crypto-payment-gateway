@@ -156,21 +156,26 @@ class WC_0xProcessing_Webhook {
         $order_status = ($settings['order_status'] ?? 'processing');
 
         // Build note
+        $amount     = $data['Amount'] ?? '0';
+        $currency   = $data['Currency'] ?? 'N/A';
+        $amount_usd = isset($data['AmountUSD']) ? number_format((float) $data['AmountUSD'], 2) : 'N/A';
+        $tx_hash    = isset($data['TxHashes'][0]) ? $data['TxHashes'][0] : 'N/A';
+
         if ($is_insufficient) {
             $note = sprintf(
                 __('0xProcessing payment confirmed (UNDERPAID). Received: %s %s (~$%s USD). Transaction: %s', 'wc-0xprocessing'),
-                $data['Amount'],
-                $data['Currency'],
-                number_format($data['AmountUSD'], 2),
-                isset($data['TxHashes'][0]) ? $data['TxHashes'][0] : 'N/A'
+                $amount,
+                $currency,
+                $amount_usd,
+                $tx_hash
             );
         } else {
             $note = sprintf(
                 __('0xProcessing payment successful. Received: %s %s (~$%s USD). Transaction: %s', 'wc-0xprocessing'),
-                $data['Amount'],
-                $data['Currency'],
-                number_format($data['AmountUSD'], 2),
-                isset($data['TxHashes'][0]) ? $data['TxHashes'][0] : 'N/A'
+                $amount,
+                $currency,
+                $amount_usd,
+                $tx_hash
             );
         }
 
@@ -178,9 +183,9 @@ class WC_0xProcessing_Webhook {
 
         // Persist payment metadata (HPOS-compatible)
         $order->update_meta_data('_oxprocessing_payment_status', 'success');
-        $order->update_meta_data('_oxprocessing_amount_paid', $data['Amount']);
-        $order->update_meta_data('_oxprocessing_amount_usd', $data['AmountUSD']);
-        $order->update_meta_data('_oxprocessing_tx_hash', isset($data['TxHashes'][0]) ? $data['TxHashes'][0] : '');
+        $order->update_meta_data('_oxprocessing_amount_paid', $amount);
+        $order->update_meta_data('_oxprocessing_amount_usd', $data['AmountUSD'] ?? 0);
+        $order->update_meta_data('_oxprocessing_tx_hash', $tx_hash !== 'N/A' ? $tx_hash : '');
         $order->save();
 
         // Update order status -- this automatically triggers WooCommerce emails
@@ -232,14 +237,14 @@ class WC_0xProcessing_Webhook {
     private static function handle_insufficient($order, $data) {
         $note = sprintf(
             __('0xProcessing payment INSUFFICIENT. Received: %s %s (~$%s USD). Awaiting merchant confirmation.', 'wc-0xprocessing'),
-            $data['Amount'],
-            $data['Currency'],
-            number_format($data['AmountUSD'], 2)
+            $data['Amount'] ?? '0',
+            $data['Currency'] ?? 'N/A',
+            isset($data['AmountUSD']) ? number_format((float) $data['AmountUSD'], 2) : 'N/A'
         );
 
         $order->add_order_note($note);
         $order->update_meta_data('_oxprocessing_payment_status', 'insufficient');
-        $order->update_meta_data('_oxprocessing_amount_received', $data['Amount']);
+        $order->update_meta_data('_oxprocessing_amount_received', $data['Amount'] ?? '0');
         $order->update_status('on-hold', __('Awaiting confirmation of underpayment.', 'wc-0xprocessing'));
         $order->save();
 
