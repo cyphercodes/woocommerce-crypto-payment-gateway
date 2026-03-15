@@ -636,10 +636,64 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
                 }
             }
 
+            // Sort: popular coins first, then alphabetically
+            $active = self::sort_currencies($active);
+
             set_transient('oxprocessing_currencies', $active, HOUR_IN_SECONDS);
             return $active;
         }
 
         return $cached;
+    }
+
+    /**
+     * Sort currencies so popular coins appear first.
+     *
+     * @param array $currencies List of currency strings or arrays.
+     * @return array Sorted list.
+     */
+    private static function sort_currencies($currencies) {
+        // Priority tokens (case-insensitive prefix match)
+        $priority_order = array(
+            'USDT',
+            'BTC',
+            'ETH',
+            'USDC',
+            'LTC',
+            'BNB',
+            'SOL',
+            'TRX',
+            'DOGE',
+            'XRP',
+            'MATIC',
+            'DAI',
+            'WBTC',
+            'WETH',
+        );
+
+        usort($currencies, function ($a, $b) use ($priority_order) {
+            $name_a = is_array($a) ? strtoupper($a['currency'] ?? '') : strtoupper($a);
+            $name_b = is_array($b) ? strtoupper($b['currency'] ?? '') : strtoupper($b);
+
+            $prio_a = PHP_INT_MAX;
+            $prio_b = PHP_INT_MAX;
+
+            foreach ($priority_order as $idx => $token) {
+                if ($prio_a === PHP_INT_MAX && strpos($name_a, $token) === 0) {
+                    $prio_a = $idx;
+                }
+                if ($prio_b === PHP_INT_MAX && strpos($name_b, $token) === 0) {
+                    $prio_b = $idx;
+                }
+            }
+
+            if ($prio_a !== $prio_b) {
+                return $prio_a - $prio_b;
+            }
+
+            return strcmp($name_a, $name_b);
+        });
+
+        return $currencies;
     }
 }

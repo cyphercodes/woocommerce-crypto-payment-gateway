@@ -26,6 +26,54 @@
         },
 
         /**
+         * Parse a currency string like "USDT (TRC20)" into { symbol: "USDT", network: "TRC20" }
+         */
+        parseCurrency: function (text) {
+            if (!text) return { symbol: '', network: '' };
+            var match = text.match(/^([A-Z0-9]+)\s*\(([^)]+)\)$/i);
+            if (match) {
+                return { symbol: match[1].toUpperCase(), network: match[2] };
+            }
+            return { symbol: text.toUpperCase(), network: '' };
+        },
+
+        /**
+         * Format a Select2 result item with a coin badge
+         */
+        formatCurrency: function (item) {
+            if (!item.id) {
+                return item.text; // Placeholder
+            }
+
+            var parsed = OXProcessing.parseCurrency(item.text);
+            var initials = parsed.symbol.substring(0, 3);
+
+            var $badge = $('<span class="oxprocessing-currency-icon-small">' + initials + '</span>');
+            var label = parsed.network
+                ? '<strong>' + parsed.symbol + '</strong> <span style="opacity:0.6;">(' + parsed.network + ')</span>'
+                : '<strong>' + parsed.symbol + '</strong>';
+            var $label = $('<span class="oxprocessing-currency-name">' + label + '</span>');
+
+            var $container = $('<span class="oxprocessing-currency-option"></span>');
+            $container.append($badge).append($label);
+            return $container;
+        },
+
+        /**
+         * Format selected item (compact view)
+         */
+        formatCurrencySelection: function (item) {
+            if (!item.id) {
+                return item.text;
+            }
+            var parsed = OXProcessing.parseCurrency(item.text);
+            if (parsed.network) {
+                return parsed.symbol + ' (' + parsed.network + ')';
+            }
+            return parsed.symbol;
+        },
+
+        /**
          * Initialize currency selector with Select2
          */
         initCurrencySelector: function () {
@@ -35,22 +83,21 @@
                 return;
             }
 
-            // Add dark theme class to original select
-            $selector.addClass('oxprocessing-dark-select');
-
             // Destroy existing Select2 instance if exists
             if ($selector.hasClass('select2-hidden-accessible')) {
                 $selector.select2('destroy');
             }
 
-            // Initialize Select2 with custom styling
+            // Initialize Select2 with custom styling and templates
             $selector.select2({
                 placeholder: '-- Select Currency --',
                 allowClear: false,
                 width: '100%',
                 dropdownCssClass: 'oxprocessing-select2-dropdown',
                 containerCssClass: 'oxprocessing-select2-container',
-                minimumResultsForSearch: 5
+                minimumResultsForSearch: 5,
+                templateResult: this.formatCurrency,
+                templateSelection: this.formatCurrencySelection
             });
 
             // If only one currency option (besides placeholder), auto-select it
