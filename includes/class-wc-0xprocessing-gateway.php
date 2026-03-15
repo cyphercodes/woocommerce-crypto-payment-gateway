@@ -24,10 +24,10 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
      */
     public function __construct() {
         $this->id                 = 'oxprocessing';
-        $this->method_title       = __('0xProcessing Crypto', 'wc-0xprocessing');
+        $this->method_title       = __('0xProcessing Crypto', '0xprocessing-for-woocommerce');
         $this->method_description = __(
             'Accept cryptocurrency payments via 0xProcessing. Supports Bitcoin, Ethereum, USDT, and 50+ other cryptocurrencies.',
-            'wc-0xprocessing'
+            '0xprocessing-for-woocommerce'
         );
         $this->has_fields = true;
         $this->icon       = WC_OXPROCESSING_PLUGIN_URL . 'assets/img/crypto-icon.svg';
@@ -42,8 +42,8 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         $this->init_settings();
 
         // Read settings
-        $this->title       = $this->get_option('title', __('Cryptocurrency via 0xProcessing', 'wc-0xprocessing'));
-        $this->description = $this->get_option('description', __('Pay with Bitcoin, Ethereum, USDT, and other cryptocurrencies.', 'wc-0xprocessing'));
+        $this->title       = $this->get_option('title', __('Cryptocurrency via 0xProcessing', '0xprocessing-for-woocommerce'));
+        $this->description = $this->get_option('description', __('Pay with Bitcoin, Ethereum, USDT, and other cryptocurrencies.', '0xprocessing-for-woocommerce'));
         $this->enabled     = $this->get_option('enabled');
         $this->test_mode   = $this->get_option('test_mode') === 'yes';
 
@@ -94,13 +94,13 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
 
         $missing = array();
         if (empty($this->get_option('merchant_id'))) {
-            $missing[] = __('Merchant ID', 'wc-0xprocessing');
+            $missing[] = __('Merchant ID', '0xprocessing-for-woocommerce');
         }
         if (empty($this->get_option('api_key'))) {
-            $missing[] = __('API Key', 'wc-0xprocessing');
+            $missing[] = __('API Key', '0xprocessing-for-woocommerce');
         }
         if (empty($this->get_option('webhook_password'))) {
-            $missing[] = __('Webhook Password', 'wc-0xprocessing');
+            $missing[] = __('Webhook Password', '0xprocessing-for-woocommerce');
         }
 
         if (empty($missing)) {
@@ -109,10 +109,10 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
 
         $url = admin_url('admin.php?page=wc-settings&tab=checkout&section=oxprocessing');
         echo '<div class="notice notice-error"><p>';
-        echo '<strong>' . esc_html__('0xProcessing Crypto', 'wc-0xprocessing') . ':</strong> ';
+        echo '<strong>' . esc_html__('0xProcessing Crypto', '0xprocessing-for-woocommerce') . ':</strong> ';
         echo sprintf(
             /* translators: %1$s: comma-separated list of missing fields, %2$s: opening link tag, %3$s: closing link tag */
-            esc_html__('The gateway is enabled but will not appear at checkout until you configure: %1$s. %2$sConfigure now%3$s', 'wc-0xprocessing'),
+            esc_html__('The gateway is enabled but will not appear at checkout until you configure: %1$s. %2$sConfigure now%3$s', '0xprocessing-for-woocommerce'),
             '<strong>' . esc_html(implode(', ', $missing)) . '</strong>',
             '<a href="' . esc_url($url) . '">',
             '</a>'
@@ -130,79 +130,79 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
     public function init_form_fields() {
         $this->form_fields = array(
             'enabled' => array(
-                'title'   => __('Enable/Disable', 'wc-0xprocessing'),
+                'title'   => __('Enable/Disable', '0xprocessing-for-woocommerce'),
                 'type'    => 'checkbox',
-                'label'   => __('Enable 0xProcessing Payment Gateway', 'wc-0xprocessing'),
+                'label'   => __('Enable 0xProcessing Payment Gateway', '0xprocessing-for-woocommerce'),
                 'default' => 'yes',
             ),
             'title' => array(
-                'title'       => __('Title', 'wc-0xprocessing'),
+                'title'       => __('Title', '0xprocessing-for-woocommerce'),
                 'type'        => 'text',
-                'description' => __('Title the customer sees during checkout.', 'wc-0xprocessing'),
-                'default'     => __('Cryptocurrency via 0xProcessing', 'wc-0xprocessing'),
+                'description' => __('Title the customer sees during checkout.', '0xprocessing-for-woocommerce'),
+                'default'     => __('Cryptocurrency via 0xProcessing', '0xprocessing-for-woocommerce'),
                 'desc_tip'    => true,
             ),
             'description' => array(
-                'title'       => __('Description', 'wc-0xprocessing'),
+                'title'       => __('Description', '0xprocessing-for-woocommerce'),
                 'type'        => 'textarea',
-                'description' => __('Description the customer sees during checkout.', 'wc-0xprocessing'),
-                'default'     => __('Pay with Bitcoin, Ethereum, USDT, and other cryptocurrencies.', 'wc-0xprocessing'),
+                'description' => __('Description the customer sees during checkout.', '0xprocessing-for-woocommerce'),
+                'default'     => __('Pay with Bitcoin, Ethereum, USDT, and other cryptocurrencies.', '0xprocessing-for-woocommerce'),
                 'desc_tip'    => true,
             ),
 
             // --- API credentials ---
             'api_settings' => array(
-                'title'       => __('API Settings', 'wc-0xprocessing'),
+                'title'       => __('API Settings', '0xprocessing-for-woocommerce'),
                 'type'        => 'title',
                 'description' => __(
                     'Enter your 0xProcessing API credentials. You can find them in your merchant dashboard under Merchant → API → General Settings.',
-                    'wc-0xprocessing'
+                    '0xprocessing-for-woocommerce'
                 ),
             ),
             'merchant_id' => array(
-                'title'    => __('Merchant ID', 'wc-0xprocessing'),
+                'title'    => __('Merchant ID', '0xprocessing-for-woocommerce'),
                 'type'     => 'text',
                 'default'  => '',
                 'desc_tip' => true,
-                'description' => __('Found in Merchant → Settings → Merchant Management.', 'wc-0xprocessing'),
+                'description' => __('Found in Merchant → Settings → Merchant Management.', '0xprocessing-for-woocommerce'),
             ),
             'api_key' => array(
-                'title'    => __('API Key', 'wc-0xprocessing'),
+                'title'    => __('API Key', '0xprocessing-for-woocommerce'),
                 'type'     => 'password',
                 'default'  => '',
                 'desc_tip' => true,
-                'description' => __('Generated in Merchant → API → General Settings. Keep this secure!', 'wc-0xprocessing'),
+                'description' => __('Generated in Merchant → API → General Settings. Keep this secure!', '0xprocessing-for-woocommerce'),
             ),
             'webhook_password' => array(
-                'title'    => __('Webhook Password', 'wc-0xprocessing'),
+                'title'    => __('Webhook Password', '0xprocessing-for-woocommerce'),
                 'type'     => 'password',
                 'default'  => '',
                 'desc_tip' => true,
-                'description' => __('Must match the password set in Merchant → API → Webhook URL.', 'wc-0xprocessing'),
+                'description' => __('Must match the password set in Merchant → API → Webhook URL.', '0xprocessing-for-woocommerce'),
             ),
 
             // --- Advanced ---
             'advanced_settings' => array(
-                'title'       => __('Advanced Settings', 'wc-0xprocessing'),
+                'title'       => __('Advanced Settings', '0xprocessing-for-woocommerce'),
                 'type'        => 'title',
-                'description' => __('Configure advanced payment options.', 'wc-0xprocessing'),
+                'description' => __('Configure advanced payment options.', '0xprocessing-for-woocommerce'),
             ),
             'test_mode' => array(
-                'title'       => __('Test Mode', 'wc-0xprocessing'),
+                'title'       => __('Test Mode', '0xprocessing-for-woocommerce'),
                 'type'        => 'checkbox',
-                'label'       => __('Enable Test Mode', 'wc-0xprocessing'),
-                'description' => __('Test payments are not real. You must be logged into your 0xProcessing merchant account.', 'wc-0xprocessing'),
+                'label'       => __('Enable Test Mode', '0xprocessing-for-woocommerce'),
+                'description' => __('Test payments are not real. You must be logged into your 0xProcessing merchant account.', '0xprocessing-for-woocommerce'),
                 'default'     => 'no',
                 'desc_tip'    => true,
             ),
             'order_status' => array(
-                'title'       => __('Successful Order Status', 'wc-0xprocessing'),
+                'title'       => __('Successful Order Status', '0xprocessing-for-woocommerce'),
                 'type'        => 'select',
-                'description' => __('Order status after a successful crypto payment.', 'wc-0xprocessing'),
+                'description' => __('Order status after a successful crypto payment.', '0xprocessing-for-woocommerce'),
                 'default'     => 'processing',
                 'options'     => array(
-                    'processing' => __('Processing', 'wc-0xprocessing'),
-                    'completed'  => __('Completed', 'wc-0xprocessing'),
+                    'processing' => __('Processing', '0xprocessing-for-woocommerce'),
+                    'completed'  => __('Completed', '0xprocessing-for-woocommerce'),
                 ),
                 'desc_tip'    => true,
             ),
@@ -218,8 +218,8 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
 
         $webhook_url = rest_url('oxprocessing/v1/webhook');
         echo '<div class="notice notice-info" style="margin:15px 0;padding:12px;">';
-        echo '<p><strong>' . esc_html__('Webhook Configuration Required', 'wc-0xprocessing') . '</strong></p>';
-        echo '<p>' . esc_html__('Set this Webhook URL in your 0xProcessing dashboard (Merchant → API → Webhook URL):', 'wc-0xprocessing') . '</p>';
+        echo '<p><strong>' . esc_html__('Webhook Configuration Required', '0xprocessing-for-woocommerce') . '</strong></p>';
+        echo '<p>' . esc_html__('Set this Webhook URL in your 0xProcessing dashboard (Merchant → API → Webhook URL):', '0xprocessing-for-woocommerce') . '</p>';
         echo '<code style="background:#f0f0f0;padding:5px 10px;display:inline-block;margin:5px 0;">'
             . esc_html($webhook_url)
             . '</code>';
@@ -248,9 +248,9 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
 
         if (!empty($currencies)) {
             echo '<div class="oxprocessing-currency-selector">';
-            echo '<label for="oxprocessing_currency">' . esc_html__('Select Cryptocurrency:', 'wc-0xprocessing') . '</label>';
+            echo '<label for="oxprocessing_currency">' . esc_html__('Select Cryptocurrency:', '0xprocessing-for-woocommerce') . '</label>';
             echo '<select name="oxprocessing_currency" id="oxprocessing_currency" class="select" style="width:100%">';
-            echo '<option value="">' . esc_html__('-- Select Currency --', 'wc-0xprocessing') . '</option>';
+            echo '<option value="">' . esc_html__('-- Select Currency --', '0xprocessing-for-woocommerce') . '</option>';
 
             foreach ($currencies as $currency) {
                 $name = is_array($currency) ? ($currency['currency'] ?? '') : $currency;
@@ -261,15 +261,15 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
             }
 
             echo '</select>';
-            echo '<p class="description">' . esc_html__('Choose your preferred cryptocurrency.', 'wc-0xprocessing') . '</p>';
+            echo '<p class="description">' . esc_html__('Choose your preferred cryptocurrency.', '0xprocessing-for-woocommerce') . '</p>';
             echo '</div>';
         }
 
         // Test mode banner
         if ($this->test_mode) {
             echo '<div class="oxprocessing-test-mode-notice">';
-            echo '<strong>' . esc_html__('TEST MODE ENABLED', 'wc-0xprocessing') . '</strong><br>';
-            echo esc_html__('No real funds will be processed.', 'wc-0xprocessing');
+            echo '<strong>' . esc_html__('TEST MODE ENABLED', '0xprocessing-for-woocommerce') . '</strong><br>';
+            echo esc_html__('No real funds will be processed.', '0xprocessing-for-woocommerce');
             echo '</div>';
         }
 
@@ -277,7 +277,7 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         if (current_user_can('manage_options')) {
             $wh = rest_url('oxprocessing/v1/webhook');
             echo '<div class="oxprocessing-webhook-info">';
-            echo '<strong>' . esc_html__('Admin — Webhook URL:', 'wc-0xprocessing') . '</strong><br>';
+            echo '<strong>' . esc_html__('Admin — Webhook URL:', '0xprocessing-for-woocommerce') . '</strong><br>';
             echo '<code>' . esc_html($wh) . '</code>';
             echo '</div>';
         }
@@ -289,12 +289,14 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
      * @return bool
      */
     public function validate_fields() {
+        // Nonce is verified by WooCommerce core in WC_Checkout::process_checkout().
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
         $currency = isset($_POST['oxprocessing_currency'])
-            ? wc_clean(wp_unslash($_POST['oxprocessing_currency']))
+            ? sanitize_text_field(wp_unslash($_POST['oxprocessing_currency'])) // phpcs:ignore WordPress.Security.NonceVerification.Missing
             : '';
 
         if (empty($currency)) {
-            wc_add_notice(__('Please select a cryptocurrency for payment.', 'wc-0xprocessing'), 'error');
+            wc_add_notice(__('Please select a cryptocurrency for payment.', '0xprocessing-for-woocommerce'), 'error');
             return false;
         }
         return true;
@@ -312,10 +314,14 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
      */
     public function process_payment($order_id) {
         $order    = wc_get_order($order_id);
-        $currency = wc_clean(wp_unslash($_POST['oxprocessing_currency'] ?? ''));
+        // Nonce is verified by WooCommerce core in WC_Checkout::process_checkout().
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $currency = isset($_POST['oxprocessing_currency'])
+            ? sanitize_text_field(wp_unslash($_POST['oxprocessing_currency'])) // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            : '';
 
         if (empty($currency)) {
-            wc_add_notice(__('Please select a cryptocurrency.', 'wc-0xprocessing'), 'error');
+            wc_add_notice(__('Please select a cryptocurrency.', '0xprocessing-for-woocommerce'), 'error');
             return array('result' => 'failure');
         }
 
@@ -368,7 +374,7 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         if (is_wp_error($response)) {
             $this->api->log('error', 'Payment creation failed for order #' . $order_id, $response->get_error_message());
             wc_add_notice(
-                __('Payment creation failed. Please try again or contact support.', 'wc-0xprocessing'),
+                __('Payment creation failed. Please try again or contact support.', '0xprocessing-for-woocommerce'),
                 'error'
             );
             return array('result' => 'failure');
@@ -376,7 +382,7 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
 
         if (!isset($response['redirectUrl'], $response['id'])) {
             $this->api->log('error', 'Unexpected API response for order #' . $order_id, $response);
-            wc_add_notice(__('Unexpected response from payment provider.', 'wc-0xprocessing'), 'error');
+            wc_add_notice(__('Unexpected response from payment provider.', '0xprocessing-for-woocommerce'), 'error');
             return array('result' => 'failure');
         }
 
@@ -398,7 +404,7 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         ));
 
         // Mark order as pending, reduce stock, clear cart
-        $order->update_status('pending', __('Awaiting cryptocurrency payment via 0xProcessing.', 'wc-0xprocessing'));
+        $order->update_status('pending', __('Awaiting cryptocurrency payment via 0xProcessing.', '0xprocessing-for-woocommerce'));
         wc_reduce_stock_levels($order_id);
         WC()->cart->empty_cart();
 
@@ -423,9 +429,9 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         $redirect_url = $order->get_meta('_oxprocessing_redirect_url');
 
         if ($redirect_url) {
-            echo '<p>' . esc_html__('Redirecting you to the payment page…', 'wc-0xprocessing') . '</p>';
+            echo '<p>' . esc_html__('Redirecting you to the payment page…', '0xprocessing-for-woocommerce') . '</p>';
             echo '<p><a href="' . esc_url($redirect_url) . '">'
-                . esc_html__('Click here if not redirected automatically', 'wc-0xprocessing')
+                . esc_html__('Click here if not redirected automatically', '0xprocessing-for-woocommerce')
                 . '</a></p>';
             echo '<script>window.location.href=' . wp_json_encode(esc_url($redirect_url)) . ';</script>';
         }
@@ -449,30 +455,31 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         $payment_id = $order->get_meta('_oxprocessing_payment_id');
 
         echo '<section class="woocommerce-order-payment-status">';
-        echo '<h2 class="woocommerce-order-payment-status__title">' . esc_html__('Payment Status', 'wc-0xprocessing') . '</h2>';
+        echo '<h2 class="woocommerce-order-payment-status__title">' . esc_html__('Payment Status', '0xprocessing-for-woocommerce') . '</h2>';
 
         if ($status === 'pending') {
             echo '<div class="woocommerce-message woocommerce-message--info oxprocessing-status-pending">';
-            echo '<p><strong>' . esc_html__('⏳ Waiting for Payment Confirmation', 'wc-0xprocessing') . '</strong></p>';
-            echo '<p>' . esc_html__('Your cryptocurrency payment is being processed. Once confirmed on the blockchain, your order will be automatically updated.', 'wc-0xprocessing') . '</p>';
+            echo '<p><strong>' . esc_html__('⏳ Waiting for Payment Confirmation', '0xprocessing-for-woocommerce') . '</strong></p>';
+            echo '<p>' . esc_html__('Your cryptocurrency payment is being processed. Once confirmed on the blockchain, your order will be automatically updated.', '0xprocessing-for-woocommerce') . '</p>';
             if ($payment_id) {
-                echo '<p class="oxprocessing-payment-id"><small>' . sprintf(esc_html__('Payment ID: %s', 'wc-0xprocessing'), esc_html($payment_id)) . '</small></p>';
+                /* translators: %s: payment ID from 0xProcessing */
+                echo '<p class="oxprocessing-payment-id"><small>' . sprintf(esc_html__('Payment ID: %s', '0xprocessing-for-woocommerce'), esc_html($payment_id)) . '</small></p>';
             }
             echo '</div>';
         } elseif (in_array($status, array('processing', 'completed'), true)) {
             echo '<div class="woocommerce-message woocommerce-message--success oxprocessing-status-completed">';
-            echo '<p><strong>' . esc_html__('✓ Payment Confirmed!', 'wc-0xprocessing') . '</strong></p>';
-            echo '<p>' . esc_html__('Your cryptocurrency payment has been confirmed and your order is being processed.', 'wc-0xprocessing') . '</p>';
+            echo '<p><strong>' . esc_html__('✓ Payment Confirmed!', '0xprocessing-for-woocommerce') . '</strong></p>';
+            echo '<p>' . esc_html__('Your cryptocurrency payment has been confirmed and your order is being processed.', '0xprocessing-for-woocommerce') . '</p>';
             echo '</div>';
         } elseif ($status === 'failed') {
             echo '<div class="woocommerce-error oxprocessing-status-failed">';
-            echo '<p><strong>' . esc_html__('✗ Payment Failed', 'wc-0xprocessing') . '</strong></p>';
-            echo '<p>' . esc_html__('Your payment could not be processed. Please try again or contact support.', 'wc-0xprocessing') . '</p>';
+            echo '<p><strong>' . esc_html__('✗ Payment Failed', '0xprocessing-for-woocommerce') . '</strong></p>';
+            echo '<p>' . esc_html__('Your payment could not be processed. Please try again or contact support.', '0xprocessing-for-woocommerce') . '</p>';
             echo '</div>';
         } elseif ($status === 'cancelled') {
             echo '<div class="woocommerce-info oxprocessing-status-cancelled">';
-            echo '<p><strong>' . esc_html__('Order Cancelled', 'wc-0xprocessing') . '</strong></p>';
-            echo '<p>' . esc_html__('This order has been cancelled.', 'wc-0xprocessing') . '</p>';
+            echo '<p><strong>' . esc_html__('Order Cancelled', '0xprocessing-for-woocommerce') . '</strong></p>';
+            echo '<p>' . esc_html__('This order has been cancelled.', '0xprocessing-for-woocommerce') . '</p>';
             echo '</div>';
         }
 

@@ -64,6 +64,7 @@ class WC_0xProcessing_Database {
 
         // Log table creation
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log('[0xProcessing] Database table created/updated: ' . $this->table_name);
         }
     }
@@ -122,10 +123,12 @@ class WC_0xProcessing_Database {
 
         $formats = array('%d', '%d', '%s', '%f', '%s', '%f', '%f', '%s', '%d', '%s', '%s', '%s');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $result = $wpdb->insert($this->table_name, $insert_data, $formats);
 
         if ($result === false) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
                 error_log('[0xProcessing] Database insert error: ' . $wpdb->last_error);
             }
             return false;
@@ -181,6 +184,7 @@ class WC_0xProcessing_Database {
             return false;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $result = $wpdb->update(
             $this->table_name,
             $update_data,
@@ -190,6 +194,7 @@ class WC_0xProcessing_Database {
         );
 
         if ($result === false && defined('WP_DEBUG') && WP_DEBUG) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log('[0xProcessing] Database update error: ' . $wpdb->last_error);
         }
 
@@ -205,6 +210,7 @@ class WC_0xProcessing_Database {
     public function get_payment_by_payment_id($payment_id) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$this->table_name} WHERE payment_id = %d",
             absint($payment_id)
@@ -222,6 +228,7 @@ class WC_0xProcessing_Database {
     public function get_payment_by_order_id($order_id) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$this->table_name} WHERE order_id = %d ORDER BY id DESC LIMIT 1",
             absint($order_id)
@@ -240,6 +247,7 @@ class WC_0xProcessing_Database {
     public function get_payments_by_status($status, $limit = 100) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$this->table_name} WHERE status = %s ORDER BY created_at DESC LIMIT %d",
             sanitize_text_field($status),
@@ -259,6 +267,7 @@ class WC_0xProcessing_Database {
     public function get_all_payments($limit = 100, $offset = 0) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$this->table_name} ORDER BY created_at DESC LIMIT %d OFFSET %d",
             absint($limit),
@@ -277,6 +286,7 @@ class WC_0xProcessing_Database {
     public function delete_payment($payment_id) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $result = $wpdb->delete(
             $this->table_name,
             array('payment_id' => absint($payment_id)),
@@ -301,12 +311,15 @@ class WC_0xProcessing_Database {
         );
 
         // Total payments
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $stats['total_payments'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name}");
 
         // Total fiat amount
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $stats['total_amount_fiat'] = $wpdb->get_var("SELECT SUM(amount_fiat) FROM {$this->table_name} WHERE status = 'success'");
 
         // Status counts
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $status_results = $wpdb->get_results(
             "SELECT status, COUNT(*) as count FROM {$this->table_name} GROUP BY status"
         );
@@ -327,6 +340,7 @@ class WC_0xProcessing_Database {
     public function clean_old_pending_payments($days = 7) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->query($wpdb->prepare(
             "DELETE FROM {$this->table_name} 
              WHERE status = 'pending' 
@@ -342,6 +356,7 @@ class WC_0xProcessing_Database {
      */
     public function drop_table() {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $wpdb->query("DROP TABLE IF EXISTS {$this->table_name}");
     }
 }

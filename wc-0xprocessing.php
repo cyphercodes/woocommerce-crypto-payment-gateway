@@ -8,7 +8,7 @@
  * Author URI: https://github.com/cyphercodes
  * License: GPL v3 or later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
- * Text Domain: wc-0xprocessing
+ * Text Domain: 0xprocessing-for-woocommerce
  * Domain Path: /languages
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -209,7 +209,7 @@ class WC_0xProcessing_Main {
      */
     public function add_settings_link($links) {
         $url = admin_url('admin.php?page=wc-settings&tab=checkout&section=oxprocessing');
-        array_unshift($links, '<a href="' . esc_url($url) . '">' . esc_html__('Settings', 'wc-0xprocessing') . '</a>');
+        array_unshift($links, '<a href="' . esc_url($url) . '">' . esc_html__('Settings', '0xprocessing-for-woocommerce') . '</a>');
         return $links;
     }
 
@@ -218,7 +218,7 @@ class WC_0xProcessing_Main {
      */
     public function woocommerce_missing_notice() {
         echo '<div class="error"><p>'
-            . esc_html__('0xProcessing for WooCommerce requires WooCommerce to be installed and active.', 'wc-0xprocessing')
+            . esc_html__('0xProcessing for WooCommerce requires WooCommerce to be installed and active.', '0xprocessing-for-woocommerce')
             . '</p></div>';
     }
 
@@ -240,9 +240,9 @@ class WC_0xProcessing_Main {
         // Only show if gateway is enabled but password is empty
         if (($settings['enabled'] ?? 'no') === 'yes' && empty($settings['webhook_password'])) {
             echo '<div class="notice notice-warning"><p>'
-                . esc_html__('⚠️ 0xProcessing: Webhook password is not set. Webhook signature verification is disabled, which is insecure. Please set a webhook password in ', 'wc-0xprocessing')
+                . esc_html__('⚠️ 0xProcessing: Webhook password is not set. Webhook signature verification is disabled, which is insecure. Please set a webhook password in ', '0xprocessing-for-woocommerce')
                 . '<a href="' . esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=oxprocessing')) . '">'
-                . esc_html__('payment settings', 'wc-0xprocessing')
+                . esc_html__('payment settings', '0xprocessing-for-woocommerce')
                 . '</a>.</p></div>';
         }
     }

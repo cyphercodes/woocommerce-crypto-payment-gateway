@@ -120,14 +120,15 @@ class WC_0xProcessing_API {
             $this->log('error', sprintf('%s returned HTTP %d: %s', $context, $http_code, $body));
             return new WP_Error(
                 'http_error',
-                sprintf(__('0xProcessing returned HTTP %d', 'wc-0xprocessing'), $http_code)
+                /* translators: %d: HTTP status code */
+                sprintf(__('0xProcessing returned HTTP %d', '0xprocessing-for-woocommerce'), $http_code)
             );
         }
 
         $data = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->log('error', $context . ' JSON decode error: ' . json_last_error_msg());
-            return new WP_Error('json_error', __('Failed to parse API response', 'wc-0xprocessing'));
+            return new WP_Error('json_error', __('Failed to parse API response', '0xprocessing-for-woocommerce'));
         }
 
         return $data;
@@ -436,6 +437,7 @@ class WC_0xProcessing_API {
         }
 
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log($full);
         }
     }

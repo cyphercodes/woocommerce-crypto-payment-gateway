@@ -162,16 +162,18 @@ class WC_0xProcessing_Webhook {
         $tx_hash    = isset($data['TxHashes'][0]) ? $data['TxHashes'][0] : 'N/A';
 
         if ($is_insufficient) {
+            /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
             $note = sprintf(
-                __('0xProcessing payment confirmed (UNDERPAID). Received: %s %s (~$%s USD). Transaction: %s', 'wc-0xprocessing'),
+                __('0xProcessing payment confirmed (UNDERPAID). Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', '0xprocessing-for-woocommerce'),
                 $amount,
                 $currency,
                 $amount_usd,
                 $tx_hash
             );
         } else {
+            /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
             $note = sprintf(
-                __('0xProcessing payment successful. Received: %s %s (~$%s USD). Transaction: %s', 'wc-0xprocessing'),
+                __('0xProcessing payment successful. Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', '0xprocessing-for-woocommerce'),
                 $amount,
                 $currency,
                 $amount_usd,
@@ -206,9 +208,10 @@ class WC_0xProcessing_Webhook {
      * @param array    $data  Webhook data.
      */
     private static function handle_canceled($order, $data) {
+        /* translators: %s: cryptocurrency name */
         $note = sprintf(
-            __('0xProcessing payment CANCELED. Payment window expired without funds. Currency: %s', 'wc-0xprocessing'),
-            $data['Currency']
+            __('0xProcessing payment CANCELED. Payment window expired without funds. Currency: %s', '0xprocessing-for-woocommerce'),
+            $data['Currency'] ?? 'N/A'
         );
 
         $order->add_order_note($note);
@@ -222,7 +225,7 @@ class WC_0xProcessing_Webhook {
 
         // Cancel order if still pending
         if ($order->get_status() === 'pending') {
-            $order->update_status('cancelled', __('Crypto payment window expired.', 'wc-0xprocessing'));
+            $order->update_status('cancelled', __('Crypto payment window expired.', '0xprocessing-for-woocommerce'));
         }
 
         self::log('info', 'Payment canceled', array('order_id' => $order->get_id()));
@@ -235,8 +238,9 @@ class WC_0xProcessing_Webhook {
      * @param array    $data  Webhook data.
      */
     private static function handle_insufficient($order, $data) {
+        /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value */
         $note = sprintf(
-            __('0xProcessing payment INSUFFICIENT. Received: %s %s (~$%s USD). Awaiting merchant confirmation.', 'wc-0xprocessing'),
+            __('0xProcessing payment INSUFFICIENT. Received: %1$s %2$s (~$%3$s USD). Awaiting merchant confirmation.', '0xprocessing-for-woocommerce'),
             $data['Amount'] ?? '0',
             $data['Currency'] ?? 'N/A',
             isset($data['AmountUSD']) ? number_format((float) $data['AmountUSD'], 2) : 'N/A'
@@ -245,12 +249,13 @@ class WC_0xProcessing_Webhook {
         $order->add_order_note($note);
         $order->update_meta_data('_oxprocessing_payment_status', 'insufficient');
         $order->update_meta_data('_oxprocessing_amount_received', $data['Amount'] ?? '0');
-        $order->update_status('on-hold', __('Awaiting confirmation of underpayment.', 'wc-0xprocessing'));
+        $order->update_status('on-hold', __('Awaiting confirmation of underpayment.', '0xprocessing-for-woocommerce'));
         $order->save();
 
         // Notify admin
         $admin_email = get_option('admin_email');
-        $subject     = sprintf(__('[%s] Insufficient payment for order #%s', 'wc-0xprocessing'), get_bloginfo('name'), $order->get_order_number());
+        /* translators: %1$s: site name, %2$s: order number */
+        $subject     = sprintf(__('[%1$s] Insufficient payment for order #%2$s', '0xprocessing-for-woocommerce'), get_bloginfo('name'), $order->get_order_number());
         wp_mail($admin_email, $subject, $note);
 
         self::log('info', 'Insufficient payment', array('order_id' => $order->get_id()));
@@ -324,6 +329,7 @@ class WC_0xProcessing_Webhook {
 
         // Fallback to PHP error_log if WP_DEBUG enabled
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log($full);
         }
     }
