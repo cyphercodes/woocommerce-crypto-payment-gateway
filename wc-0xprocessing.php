@@ -197,40 +197,110 @@ class WC_0xProcessing_Main {
         }
         $gateway = $gateways['oxprocessing'];
 
-        $map = array(
-            'theme_accent_color'  => array('var' => '--oxp-accent',  'default' => '#4a6cf7'),
-            'theme_text_color'    => array('var' => '--oxp-text',    'default' => '#333333'),
-            'theme_bg_color'      => array('var' => '--oxp-bg',      'default' => '#ffffff'),
-            'theme_bg_alt_color'  => array('var' => '--oxp-bg-alt',  'default' => '#f8f9fa'),
-            'theme_border_color'  => array('var' => '--oxp-border',  'default' => '#e0e0e0'),
-            'theme_border_radius' => array('var' => '--oxp-radius',  'default' => '8px'),
+        // Preset definitions
+        $presets = array(
+            'light' => array(
+                'theme_accent_color'         => '#4a6cf7',
+                'theme_text_color'           => '#333333',
+                'theme_text_secondary_color' => '#666666',
+                'theme_text_muted_color'     => '#999999',
+                'theme_bg_color'             => '#ffffff',
+                'theme_bg_alt_color'         => '#f8f9fa',
+                'theme_input_bg_color'       => '#ffffff',
+                'theme_border_color'         => '#e0e0e0',
+                'theme_border_radius'        => '8px',
+            ),
+            'dark' => array(
+                'theme_accent_color'         => '#6c8cff',
+                'theme_text_color'           => '#e0e0e0',
+                'theme_text_secondary_color' => '#a0a0a0',
+                'theme_text_muted_color'     => '#707070',
+                'theme_bg_color'             => '#1a1a1a',
+                'theme_bg_alt_color'         => '#222222',
+                'theme_input_bg_color'       => '#2a2a2a',
+                'theme_border_color'         => '#333333',
+                'theme_border_radius'        => '8px',
+            ),
         );
 
+        $preset = $gateway->get_option('theme_preset', 'light');
+
+        // Map of setting key => CSS variable
+        $color_map = array(
+            'theme_accent_color'         => '--oxp-accent',
+            'theme_text_color'           => '--oxp-text',
+            'theme_text_secondary_color' => '--oxp-text-light',
+            'theme_text_muted_color'     => '--oxp-text-muted',
+            'theme_bg_color'             => '--oxp-bg',
+            'theme_bg_alt_color'         => '--oxp-bg-alt',
+            'theme_input_bg_color'       => '--oxp-bg-input',
+            'theme_border_color'         => '--oxp-border',
+            'theme_border_radius'        => '--oxp-radius',
+        );
+
+        // Light defaults (CSS defaults in oxprocessing.css)
+        $light_defaults = $presets['light'];
+
         $vars = array();
-        foreach ($map as $key => $info) {
-            $value = $gateway->get_option($key, $info['default']);
-            if (!empty($value) && $value !== $info['default']) {
-                $vars[] = $info['var'] . ': ' . sanitize_text_field($value);
+
+        if ($preset === 'custom') {
+            // Custom: use individual saved settings, only override non-defaults
+            foreach ($color_map as $key => $css_var) {
+                $default = $light_defaults[$key];
+                $value   = $gateway->get_option($key, $default);
+                if (!empty($value) && $value !== $default) {
+                    $vars[] = $css_var . ': ' . sanitize_text_field($value);
+                }
             }
+        } elseif ($preset === 'dark') {
+            // Dark: apply the full dark palette
+            foreach ($color_map as $key => $css_var) {
+                $vars[] = $css_var . ': ' . $presets['dark'][$key];
+            }
+            // Dark theme needs adapted shadows
+            $vars[] = '--oxp-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)';
+            $vars[] = '--oxp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4)';
+        }
+        // 'light' = no overrides needed, CSS defaults are light
+
+        // Compute accent-hover and accent-rgb
+        $accent_default = $light_defaults['theme_accent_color'];
+        if ($preset === 'dark') {
+            $accent = $presets['dark']['theme_accent_color'];
+        } elseif ($preset === 'custom') {
+            $accent = $gateway->get_option('theme_accent_color', $accent_default);
+        } else {
+            $accent = $accent_default;
         }
 
-        // Also compute accent-hover (10% darker) if accent was changed
-        $accent = $gateway->get_option('theme_accent_color', '#4a6cf7');
-        if (!empty($accent) && $accent !== '#4a6cf7') {
+        if ($accent !== $accent_default) {
             $vars[] = '--oxp-accent-hover: ' . self::darken_hex($accent, 15);
-            // Compute RGB values for rgba() usage
             $rgb = self::hex_to_rgb($accent);
             if ($rgb) {
                 $vars[] = '--oxp-accent-rgb: ' . implode(', ', $rgb);
             }
         }
 
-        if (empty($vars)) {
-            return;
+        // Icon size CSS
+        $icon_size = $gateway->get_option('theme_icon_size', 'small');
+        $icon_sizes = array('small' => '24px', 'medium' => '32px', 'large' => '40px');
+        $icon_css = '';
+        if (isset($icon_sizes[$icon_size])) {
+            $px = $icon_sizes[$icon_size];
+            $icon_css = '.payment_method_oxprocessing img { max-height: ' . $px . '; width: auto; }';
         }
 
-        $css = ':root { ' . implode('; ', $vars) . '; }';
-        wp_add_inline_style('wc-oxprocessing-style', $css);
+        $css = '';
+        if (!empty($vars)) {
+            $css .= ':root { ' . implode('; ', $vars) . '; }';
+        }
+        if (!empty($icon_css)) {
+            $css .= ' ' . $icon_css;
+        }
+
+        if (!empty($css)) {
+            wp_add_inline_style('wc-oxprocessing-style', $css);
+        }
     }
 
     /**
@@ -288,6 +358,54 @@ class WC_0xProcessing_Main {
             array(),
             WC_OXPROCESSING_VERSION
         );
+
+        // Inline JS for theme preset auto-fill
+        $preset_js = "
+        jQuery(function($) {
+            var presets = {
+                light: {
+                    theme_accent_color: '#4a6cf7',
+                    theme_text_color: '#333333',
+                    theme_text_secondary_color: '#666666',
+                    theme_text_muted_color: '#999999',
+                    theme_bg_color: '#ffffff',
+                    theme_bg_alt_color: '#f8f9fa',
+                    theme_input_bg_color: '#ffffff',
+                    theme_border_color: '#e0e0e0',
+                    theme_border_radius: '8px'
+                },
+                dark: {
+                    theme_accent_color: '#6c8cff',
+                    theme_text_color: '#e0e0e0',
+                    theme_text_secondary_color: '#a0a0a0',
+                    theme_text_muted_color: '#707070',
+                    theme_bg_color: '#1a1a1a',
+                    theme_bg_alt_color: '#222222',
+                    theme_input_bg_color: '#2a2a2a',
+                    theme_border_color: '#333333',
+                    theme_border_radius: '8px'
+                }
+            };
+
+            $('#woocommerce_oxprocessing_theme_preset').on('change', function() {
+                var preset = $(this).val();
+                if (preset === 'custom') return;
+                var values = presets[preset];
+                if (!values) return;
+                $.each(values, function(key, val) {
+                    var field = $('#woocommerce_oxprocessing_' + key);
+                    if (field.length) {
+                        field.val(val).trigger('change');
+                        // Update WP color picker swatch if present
+                        field.closest('.wp-picker-container')
+                             .find('.wp-color-result')
+                             .css('background-color', val);
+                    }
+                });
+            });
+        });
+        ";
+        wp_add_inline_script('jquery', $preset_js);
     }
 
     /**
