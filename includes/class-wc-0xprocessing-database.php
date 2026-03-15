@@ -212,7 +212,8 @@ class WC_0xProcessing_Database {
 
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
         $result = $wpdb->get_row($wpdb->prepare(
-            'SELECT * FROM ' . $this->table_name . ' WHERE payment_id = %d',
+            'SELECT * FROM %i WHERE payment_id = %d',
+            $this->table_name,
             absint($payment_id)
         ));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery
@@ -231,7 +232,8 @@ class WC_0xProcessing_Database {
 
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
         $result = $wpdb->get_row($wpdb->prepare(
-            'SELECT * FROM ' . $this->table_name . ' WHERE order_id = %d ORDER BY id DESC LIMIT 1',
+            'SELECT * FROM %i WHERE order_id = %d ORDER BY id DESC LIMIT 1',
+            $this->table_name,
             absint($order_id)
         ));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery
@@ -251,7 +253,8 @@ class WC_0xProcessing_Database {
 
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
         $results = $wpdb->get_results($wpdb->prepare(
-            'SELECT * FROM ' . $this->table_name . ' WHERE status = %s ORDER BY created_at DESC LIMIT %d',
+            'SELECT * FROM %i WHERE status = %s ORDER BY created_at DESC LIMIT %d',
+            $this->table_name,
             sanitize_text_field($status),
             absint($limit)
         ));
@@ -272,7 +275,8 @@ class WC_0xProcessing_Database {
 
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
         $results = $wpdb->get_results($wpdb->prepare(
-            'SELECT * FROM ' . $this->table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+            'SELECT * FROM %i ORDER BY created_at DESC LIMIT %d OFFSET %d',
+            $this->table_name,
             absint($limit),
             absint($offset)
         ));
@@ -316,18 +320,18 @@ class WC_0xProcessing_Database {
 
         // Total payments
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
-        $stats['total_payments'] = $wpdb->get_var('SELECT COUNT(*) FROM ' . $this->table_name);
+        $stats['total_payments'] = $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $this->table_name));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery
 
         // Total fiat amount
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
-        $stats['total_amount_fiat'] = $wpdb->get_var("SELECT SUM(amount_fiat) FROM " . $this->table_name . " WHERE status = 'success'");
+        $stats['total_amount_fiat'] = $wpdb->get_var($wpdb->prepare("SELECT SUM(amount_fiat) FROM %i WHERE status = 'success'", $this->table_name));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery
 
         // Status counts
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
         $status_results = $wpdb->get_results(
-            'SELECT status, COUNT(*) as count FROM ' . $this->table_name . ' GROUP BY status'
+            $wpdb->prepare('SELECT status, COUNT(*) as count FROM %i GROUP BY status', $this->table_name)
         );
         // phpcs:enable WordPress.DB.DirectDatabaseQuery
 
@@ -349,7 +353,8 @@ class WC_0xProcessing_Database {
 
         // phpcs:disable WordPress.DB.DirectDatabaseQuery
         $result = $wpdb->query($wpdb->prepare(
-            'DELETE FROM ' . $this->table_name . ' WHERE status = %s AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)',
+            'DELETE FROM %i WHERE status = %s AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)',
+            $this->table_name,
             'pending',
             absint($days)
         ));
