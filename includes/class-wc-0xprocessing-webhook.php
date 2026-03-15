@@ -77,8 +77,8 @@ class WC_0xProcessing_Webhook {
             // Last resort: search all orders with matching payment_id
             $orders = wc_get_orders(array(
                 'limit'      => 1,
-                'meta_key'   => '_oxprocessing_payment_id',
-                'meta_value' => $data['PaymentId'],
+                'meta_key'   => '_oxprocessing_payment_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required for payment lookup.
+                'meta_value' => $data['PaymentId'], // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Required for payment lookup.
             ));
             if ($orders && count($orders) > 0) {
                 $order_id = $orders[0]->get_id();
@@ -162,8 +162,8 @@ class WC_0xProcessing_Webhook {
         $tx_hash    = isset($data['TxHashes'][0]) ? $data['TxHashes'][0] : 'N/A';
 
         if ($is_insufficient) {
-            /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
             $note = sprintf(
+                /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
                 __('0xProcessing payment confirmed (UNDERPAID). Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', '0xprocessing-for-woocommerce'),
                 $amount,
                 $currency,
@@ -171,8 +171,8 @@ class WC_0xProcessing_Webhook {
                 $tx_hash
             );
         } else {
-            /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
             $note = sprintf(
+                /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
                 __('0xProcessing payment successful. Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', '0xprocessing-for-woocommerce'),
                 $amount,
                 $currency,
@@ -208,8 +208,8 @@ class WC_0xProcessing_Webhook {
      * @param array    $data  Webhook data.
      */
     private static function handle_canceled($order, $data) {
-        /* translators: %s: cryptocurrency name */
         $note = sprintf(
+            /* translators: %s: cryptocurrency name */
             __('0xProcessing payment CANCELED. Payment window expired without funds. Currency: %s', '0xprocessing-for-woocommerce'),
             $data['Currency'] ?? 'N/A'
         );
@@ -238,8 +238,8 @@ class WC_0xProcessing_Webhook {
      * @param array    $data  Webhook data.
      */
     private static function handle_insufficient($order, $data) {
-        /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value */
         $note = sprintf(
+            /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value */
             __('0xProcessing payment INSUFFICIENT. Received: %1$s %2$s (~$%3$s USD). Awaiting merchant confirmation.', '0xprocessing-for-woocommerce'),
             $data['Amount'] ?? '0',
             $data['Currency'] ?? 'N/A',
