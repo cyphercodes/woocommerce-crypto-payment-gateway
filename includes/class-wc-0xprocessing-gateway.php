@@ -206,6 +206,64 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
                 ),
                 'desc_tip'    => true,
             ),
+
+            // --- Theme Customization ---
+            'theme_settings' => array(
+                'title'       => __('Theme Customization', '0xprocessing-for-woocommerce'),
+                'type'        => 'title',
+                'description' => __(
+                    'Customize the look and feel of the payment form on checkout. Leave blank to use defaults. Theme CSS overrides (via Appearance → Customize → Additional CSS) will take precedence over these settings.',
+                    '0xprocessing-for-woocommerce'
+                ),
+            ),
+            'theme_accent_color' => array(
+                'title'       => __('Accent Color', '0xprocessing-for-woocommerce'),
+                'type'        => 'color',
+                'description' => __('Primary accent color for buttons and focus states.', '0xprocessing-for-woocommerce'),
+                'default'     => '#4a6cf7',
+                'desc_tip'    => true,
+                'css'         => 'width: 80px;',
+            ),
+            'theme_text_color' => array(
+                'title'       => __('Text Color', '0xprocessing-for-woocommerce'),
+                'type'        => 'color',
+                'description' => __('Primary text color.', '0xprocessing-for-woocommerce'),
+                'default'     => '#333333',
+                'desc_tip'    => true,
+                'css'         => 'width: 80px;',
+            ),
+            'theme_bg_color' => array(
+                'title'       => __('Background Color', '0xprocessing-for-woocommerce'),
+                'type'        => 'color',
+                'description' => __('Background color for the payment form.', '0xprocessing-for-woocommerce'),
+                'default'     => '#ffffff',
+                'desc_tip'    => true,
+                'css'         => 'width: 80px;',
+            ),
+            'theme_bg_alt_color' => array(
+                'title'       => __('Alternate Background', '0xprocessing-for-woocommerce'),
+                'type'        => 'color',
+                'description' => __('Background for the currency selector area.', '0xprocessing-for-woocommerce'),
+                'default'     => '#f8f9fa',
+                'desc_tip'    => true,
+                'css'         => 'width: 80px;',
+            ),
+            'theme_border_color' => array(
+                'title'       => __('Border Color', '0xprocessing-for-woocommerce'),
+                'type'        => 'color',
+                'description' => __('Border color for inputs and containers.', '0xprocessing-for-woocommerce'),
+                'default'     => '#e0e0e0',
+                'desc_tip'    => true,
+                'css'         => 'width: 80px;',
+            ),
+            'theme_border_radius' => array(
+                'title'       => __('Border Radius', '0xprocessing-for-woocommerce'),
+                'type'        => 'text',
+                'description' => __('Corner rounding (e.g. 8px, 12px, 0). Default: 8px.', '0xprocessing-for-woocommerce'),
+                'default'     => '8px',
+                'desc_tip'    => true,
+                'css'         => 'width: 80px;',
+            ),
         );
     }
 

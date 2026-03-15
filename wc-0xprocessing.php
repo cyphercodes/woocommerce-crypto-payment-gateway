@@ -181,6 +181,95 @@ class WC_0xProcessing_Main {
             'rest_url' => rest_url('oxprocessing/v1/'),
             'nonce'    => wp_create_nonce('wp_rest'),
         ));
+
+        // Inject theme customization CSS from gateway settings
+        $this->enqueue_theme_overrides();
+    }
+
+    /**
+     * Output inline CSS for theme color overrides from gateway settings.
+     * Theme CSS (Additional CSS) will naturally override these since it loads later.
+     */
+    private function enqueue_theme_overrides() {
+        $gateways = WC()->payment_gateways()->payment_gateways();
+        if (!isset($gateways['oxprocessing'])) {
+            return;
+        }
+        $gateway = $gateways['oxprocessing'];
+
+        $map = array(
+            'theme_accent_color'  => array('var' => '--oxp-accent',  'default' => '#4a6cf7'),
+            'theme_text_color'    => array('var' => '--oxp-text',    'default' => '#333333'),
+            'theme_bg_color'      => array('var' => '--oxp-bg',      'default' => '#ffffff'),
+            'theme_bg_alt_color'  => array('var' => '--oxp-bg-alt',  'default' => '#f8f9fa'),
+            'theme_border_color'  => array('var' => '--oxp-border',  'default' => '#e0e0e0'),
+            'theme_border_radius' => array('var' => '--oxp-radius',  'default' => '8px'),
+        );
+
+        $vars = array();
+        foreach ($map as $key => $info) {
+            $value = $gateway->get_option($key, $info['default']);
+            if (!empty($value) && $value !== $info['default']) {
+                $vars[] = $info['var'] . ': ' . sanitize_text_field($value);
+            }
+        }
+
+        // Also compute accent-hover (10% darker) if accent was changed
+        $accent = $gateway->get_option('theme_accent_color', '#4a6cf7');
+        if (!empty($accent) && $accent !== '#4a6cf7') {
+            $vars[] = '--oxp-accent-hover: ' . self::darken_hex($accent, 15);
+            // Compute RGB values for rgba() usage
+            $rgb = self::hex_to_rgb($accent);
+            if ($rgb) {
+                $vars[] = '--oxp-accent-rgb: ' . implode(', ', $rgb);
+            }
+        }
+
+        if (empty($vars)) {
+            return;
+        }
+
+        $css = ':root { ' . implode('; ', $vars) . '; }';
+        wp_add_inline_style('wc-oxprocessing-style', $css);
+    }
+
+    /**
+     * Darken a hex color by a percentage.
+     *
+     * @param string $hex    Hex color (e.g. #4a6cf7).
+     * @param int    $percent Percent to darken (0-100).
+     * @return string Darkened hex color.
+     */
+    private static function darken_hex($hex, $percent) {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        $r = max(0, (int) round(hexdec(substr($hex, 0, 2)) * (1 - $percent / 100)));
+        $g = max(0, (int) round(hexdec(substr($hex, 2, 2)) * (1 - $percent / 100)));
+        $b = max(0, (int) round(hexdec(substr($hex, 4, 2)) * (1 - $percent / 100)));
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    /**
+     * Convert hex to RGB array.
+     *
+     * @param string $hex Hex color.
+     * @return array|false Array of [r, g, b] or false.
+     */
+    private static function hex_to_rgb($hex) {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if (strlen($hex) !== 6) {
+            return false;
+        }
+        return array(
+            hexdec(substr($hex, 0, 2)),
+            hexdec(substr($hex, 2, 2)),
+            hexdec(substr($hex, 4, 2)),
+        );
     }
 
     /**
