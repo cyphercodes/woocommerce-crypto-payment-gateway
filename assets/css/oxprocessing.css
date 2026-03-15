@@ -63,9 +63,12 @@
 
 /* ==========================================================================
    3. SELECT2 CONTAINER (CLOSED STATE)
+   Note: Select2 applies containerCssClass to the select2-selection element,
+   NOT to the outer select2-container. Selectors must use same-element or
+   parent-scoped targeting.
    ========================================================================== */
 
-.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection--single {
+.payment_method_oxprocessing .select2-container .select2-selection--single {
     background: var(--oxp-bg-input);
     border: 1px solid var(--oxp-border);
     height: 48px;
@@ -77,14 +80,14 @@
 }
 
 /* Focus / Open state — accent ring */
-.payment_method_oxprocessing .oxprocessing-select2-container.select2-container--focus .select2-selection--single,
-.payment_method_oxprocessing .oxprocessing-select2-container.select2-container--open .select2-selection--single {
+.payment_method_oxprocessing .select2-container--focus .select2-selection--single,
+.payment_method_oxprocessing .select2-container--open .select2-selection--single {
     border-color: var(--oxp-border-focus);
     box-shadow: 0 0 0 3px rgba(var(--oxp-accent-rgb), 0.15);
 }
 
 /* Selected text */
-.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__rendered {
+.payment_method_oxprocessing .select2-container .select2-selection__rendered {
     color: var(--oxp-text);
     font-weight: 500;
     line-height: 46px;
@@ -92,28 +95,28 @@
 }
 
 /* Placeholder text */
-.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__placeholder {
+.payment_method_oxprocessing .select2-container .select2-selection__placeholder {
     color: var(--oxp-text-muted);
 }
 
 /* Dropdown arrow */
-.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__arrow {
+.payment_method_oxprocessing .select2-container .select2-selection__arrow {
     height: 46px;
     right: 10px;
 }
 
-.payment_method_oxprocessing .oxprocessing-select2-container .select2-selection__arrow b {
+.payment_method_oxprocessing .select2-container .select2-selection__arrow b {
     border-color: var(--oxp-text-muted) transparent transparent transparent;
     border-width: 5px 4px 0 4px;
 }
 
-.payment_method_oxprocessing .oxprocessing-select2-container.select2-container--open .select2-selection__arrow b {
+.payment_method_oxprocessing .select2-container--open .select2-selection__arrow b {
     border-color: transparent transparent var(--oxp-text-muted) transparent;
     border-width: 0 4px 5px 4px;
 }
 
-/* Width — scoped to our container */
-.payment_method_oxprocessing .oxprocessing-select2-container {
+/* Width — scoped to our payment method */
+.payment_method_oxprocessing .select2-container {
     width: 100%;
 }
 

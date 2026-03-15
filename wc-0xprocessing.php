@@ -93,6 +93,9 @@ class WC_0xProcessing_Main {
 
         // Add settings link on plugins page
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_settings_link'));
+
+        // Clear currency cache when gateway settings are saved
+        add_action('woocommerce_update_options_payment_gateways_oxprocessing', array($this, 'clear_currency_cache'));
     }
 
     /**
@@ -147,6 +150,13 @@ class WC_0xProcessing_Main {
         }
 
         return new WP_REST_Response(array('error' => 'Failed to fetch currencies'), 500);
+    }
+
+    /**
+     * Clear cached currency list (used when settings are saved)
+     */
+    public function clear_currency_cache() {
+        delete_transient('oxprocessing_currencies');
     }
 
     /**
@@ -298,6 +308,93 @@ class WC_0xProcessing_Main {
             $css .= ' ' . $icon_css;
         }
 
+        // Dark mode: add aggressive overrides for Select2 and WooCommerce elements
+        // These use !important because Select2's default styles override CSS variables
+        if ($preset === 'dark' || ($preset === 'custom' && $this->is_dark_bg($gateway))) {
+            $bg     = $preset === 'dark' ? $presets['dark']['theme_bg_color'] : $gateway->get_option('theme_bg_color', '#ffffff');
+            $bg_alt = $preset === 'dark' ? $presets['dark']['theme_bg_alt_color'] : $gateway->get_option('theme_bg_alt_color', '#f8f9fa');
+            $bg_inp = $preset === 'dark' ? $presets['dark']['theme_input_bg_color'] : $gateway->get_option('theme_input_bg_color', '#ffffff');
+            $border = $preset === 'dark' ? $presets['dark']['theme_border_color'] : $gateway->get_option('theme_border_color', '#e0e0e0');
+            $text   = $preset === 'dark' ? $presets['dark']['theme_text_color'] : $gateway->get_option('theme_text_color', '#333333');
+            $muted  = $preset === 'dark' ? $presets['dark']['theme_text_muted_color'] : $gateway->get_option('theme_text_muted_color', '#999999');
+
+            $css .= '
+            /* === Dark mode overrides === */
+            .payment_method_oxprocessing .payment_box {
+                background: ' . $bg . ' !important;
+                color: ' . $text . ' !important;
+                border-color: ' . $border . ' !important;
+            }
+            .payment_method_oxprocessing .payment_box::before,
+            .payment_method_oxprocessing .payment_box::after {
+                border-bottom-color: ' . $bg . ' !important;
+                border-top-color: ' . $bg . ' !important;
+            }
+            .payment_method_oxprocessing .oxprocessing-currency-selector {
+                background: ' . $bg_alt . ' !important;
+                border-color: ' . $border . ' !important;
+            }
+            .payment_method_oxprocessing .oxprocessing-currency-selector label {
+                color: var(--oxp-accent) !important;
+            }
+            /* Select2 closed state — scoped by payment method parent */
+            .payment_method_oxprocessing .select2-container .select2-selection--single {
+                background: ' . $bg_inp . ' !important;
+                border-color: ' . $border . ' !important;
+                color: ' . $text . ' !important;
+            }
+            .payment_method_oxprocessing .select2-container .select2-selection__rendered {
+                color: ' . $text . ' !important;
+            }
+            .payment_method_oxprocessing .select2-container .select2-selection__placeholder {
+                color: ' . $muted . ' !important;
+            }
+            .payment_method_oxprocessing .select2-container .select2-selection__arrow b {
+                border-color: ' . $muted . ' transparent transparent transparent !important;
+            }
+            .payment_method_oxprocessing .select2-container--open .select2-selection__arrow b {
+                border-color: transparent transparent ' . $muted . ' transparent !important;
+            }
+            /* Select2 dropdown panel (appended to body — uses dropdownCssClass) */
+            .oxprocessing-select2-dropdown,
+            .oxprocessing-select2-dropdown .select2-results,
+            .oxprocessing-select2-dropdown .select2-search--dropdown {
+                background: ' . $bg . ' !important;
+                border-color: ' . $border . ' !important;
+            }
+            .oxprocessing-select2-dropdown .select2-search__field {
+                background: ' . $bg_inp . ' !important;
+                border-color: ' . $border . ' !important;
+                color: ' . $text . ' !important;
+            }
+            .oxprocessing-select2-dropdown .select2-search__field::placeholder {
+                color: ' . $muted . ' !important;
+            }
+            .oxprocessing-select2-dropdown .select2-results__option {
+                background: ' . $bg . ' !important;
+                color: ' . $text . ' !important;
+                border-bottom-color: ' . $border . ' !important;
+            }
+            .oxprocessing-select2-dropdown .select2-results__option--highlighted,
+            .oxprocessing-select2-dropdown .select2-results__option--highlighted.select2-results__option--selectable {
+                background: ' . $bg_alt . ' !important;
+                color: ' . $text . ' !important;
+            }
+            .oxprocessing-select2-dropdown .select2-results__option--selected,
+            .oxprocessing-select2-dropdown .select2-results__option[aria-selected="true"] {
+                background: var(--oxp-accent) !important;
+                color: #ffffff !important;
+            }
+            /* WooCommerce description text */
+            .payment_method_oxprocessing .payment_box p {
+                color: ' . $text . ' !important;
+            }
+            .payment_method_oxprocessing .oxprocessing-currency-selector .description {
+                color: ' . $muted . ' !important;
+            }
+            ';
+        }
+
         if (!empty($css)) {
             wp_add_inline_style('wc-oxprocessing-style', $css);
         }
@@ -340,6 +437,23 @@ class WC_0xProcessing_Main {
             hexdec(substr($hex, 2, 2)),
             hexdec(substr($hex, 4, 2)),
         );
+    }
+
+    /**
+     * Check if the custom background color is dark (needs aggressive overrides).
+     *
+     * @param WC_Payment_Gateway $gateway Gateway instance.
+     * @return bool True if background is dark.
+     */
+    private function is_dark_bg($gateway) {
+        $bg = $gateway->get_option('theme_bg_color', '#ffffff');
+        $rgb = self::hex_to_rgb($bg);
+        if (!$rgb) {
+            return false;
+        }
+        // Perceived luminance: if below 128, it's dark
+        $luminance = (0.299 * $rgb[0] + 0.587 * $rgb[1] + 0.114 * $rgb[2]);
+        return $luminance < 128;
     }
 
     /**
