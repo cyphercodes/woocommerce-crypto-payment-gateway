@@ -15,6 +15,7 @@ vendor/
 # Build
 *.log
 *.cache
+*.zip
 
 # Internal docs (not for distribution)
 docs/

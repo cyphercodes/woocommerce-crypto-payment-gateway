@@ -268,6 +268,18 @@ All colors are configurable via CSS custom properties. Add overrides in your the
 
 Available variables: `--oxp-accent`, `--oxp-accent-hover`, `--oxp-text`, `--oxp-text-light`, `--oxp-bg`, `--oxp-bg-alt`, `--oxp-border`, `--oxp-radius`, `--oxp-status-success`, `--oxp-status-warning`, `--oxp-status-error`.
 
+## 📦 Building a Plugin Zip
+
+Run the included build script to create a clean, WordPress-ready zip:
+
+```bash
+./build-zip.sh
+```
+
+This creates `wc-0xprocessing.zip` one directory up, excluding `.git`, dev files, macOS junk (`__MACOSX`, `.DS_Store`), and other non-distributable files. Upload the resulting zip via **Plugins → Add New → Upload Plugin**.
+
+> ⚠️ **Do not** use Finder's "Compress" or a generic `zip` command — macOS injects `__MACOSX` resource forks that break WordPress plugin detection.
+
 ## 🐛 Development
 
 ### Enable Debug Logging
