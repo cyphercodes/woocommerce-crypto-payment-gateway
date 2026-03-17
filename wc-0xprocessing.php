@@ -96,6 +96,9 @@ class WC_0xProcessing_Main {
 
         // Clear currency cache when gateway settings are saved
         add_action('woocommerce_update_options_payment_gateways_oxprocessing', array($this, 'clear_currency_cache'));
+
+        // Admin notice when webhook password is missing
+        add_action('admin_notices', array($this, 'webhook_password_missing_notice'));
     }
 
     /**
@@ -163,7 +166,7 @@ class WC_0xProcessing_Main {
      * Enqueue frontend scripts only on checkout
      */
     public function enqueue_scripts() {
-        if (!is_checkout()) {
+        if (!is_checkout() && !is_wc_endpoint_url('order-pay') && !is_wc_endpoint_url('order-received')) {
             return;
         }
 
@@ -311,12 +314,20 @@ class WC_0xProcessing_Main {
         // Dark mode: add aggressive overrides for Select2 and WooCommerce elements
         // These use !important because Select2's default styles override CSS variables
         if ($preset === 'dark' || ($preset === 'custom' && $this->is_dark_bg($gateway))) {
-            $bg     = $preset === 'dark' ? $presets['dark']['theme_bg_color'] : $gateway->get_option('theme_bg_color', '#ffffff');
-            $bg_alt = $preset === 'dark' ? $presets['dark']['theme_bg_alt_color'] : $gateway->get_option('theme_bg_alt_color', '#f8f9fa');
-            $bg_inp = $preset === 'dark' ? $presets['dark']['theme_input_bg_color'] : $gateway->get_option('theme_input_bg_color', '#ffffff');
-            $border = $preset === 'dark' ? $presets['dark']['theme_border_color'] : $gateway->get_option('theme_border_color', '#e0e0e0');
-            $text   = $preset === 'dark' ? $presets['dark']['theme_text_color'] : $gateway->get_option('theme_text_color', '#333333');
-            $muted  = $preset === 'dark' ? $presets['dark']['theme_text_muted_color'] : $gateway->get_option('theme_text_muted_color', '#999999');
+            $bg     = sanitize_hex_color( $preset === 'dark' ? $presets['dark']['theme_bg_color'] : $gateway->get_option('theme_bg_color', '#ffffff') );
+            $bg_alt = sanitize_hex_color( $preset === 'dark' ? $presets['dark']['theme_bg_alt_color'] : $gateway->get_option('theme_bg_alt_color', '#f8f9fa') );
+            $bg_inp = sanitize_hex_color( $preset === 'dark' ? $presets['dark']['theme_input_bg_color'] : $gateway->get_option('theme_input_bg_color', '#ffffff') );
+            $border = sanitize_hex_color( $preset === 'dark' ? $presets['dark']['theme_border_color'] : $gateway->get_option('theme_border_color', '#e0e0e0') );
+            $text   = sanitize_hex_color( $preset === 'dark' ? $presets['dark']['theme_text_color'] : $gateway->get_option('theme_text_color', '#333333') );
+            $muted  = sanitize_hex_color( $preset === 'dark' ? $presets['dark']['theme_text_muted_color'] : $gateway->get_option('theme_text_muted_color', '#999999') );
+
+            // Fallback if sanitize_hex_color rejects a value
+            $bg     = $bg     ?: '#ffffff';
+            $bg_alt = $bg_alt ?: '#f8f9fa';
+            $bg_inp = $bg_inp ?: '#ffffff';
+            $border = $border ?: '#e0e0e0';
+            $text   = $text   ?: '#333333';
+            $muted  = $muted  ?: '#999999';
 
             $css .= '
             /* === Dark mode overrides === */

@@ -18,6 +18,7 @@ Accept **Bitcoin, Ethereum, USDT, and 50+ cryptocurrency payments** in your WooC
 - **Insufficient Payment Handling**: Manual or automatic confirmation of underpayments
 - **Database Tracking**: All payments logged in custom table for analytics
 - **Admin Dashboard**: Payment details viewable in order admin pages
+- **WooCommerce Subscriptions**: Manual-renewal support — customers receive invoice emails for each billing cycle and pay with crypto
 
 ## 📋 Requirements
 
@@ -297,6 +298,15 @@ https://abc123.ngrok.io/wp-json/oxprocessing/v1/webhook
 ```
 
 ## 📝 Changelog
+
+### Version 1.1.0
+
+**New Features:**
+- ✅ WooCommerce Subscriptions support (manual renewal mode)
+- ✅ Switched webhook handler to use `payment_complete()` (WooCommerce best practice)
+- ✅ Renewal orders no longer double-reduce stock
+
+---
 
 ### Version 1.0.0 (Production Release)
 

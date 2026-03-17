@@ -18,6 +18,7 @@ global $wpdb;
 
 // Delete plugin options
 delete_option('woocommerce_oxprocessing_settings');
+delete_option('oxprocessing_db_version');
 
 // Delete transients
 delete_transient('oxprocessing_currencies');

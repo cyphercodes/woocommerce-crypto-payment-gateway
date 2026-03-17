@@ -35,7 +35,17 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         // We do NOT support refunds through the API — they must be handled
         // in the 0xProcessing dashboard.  Declaring 'refunds' would show a
         // non-functional button in WooCommerce.
-        $this->supports = array('products');
+        $this->supports = array(
+            'products',
+            'subscriptions',
+            'subscription_cancellation',
+            'subscription_suspension',
+            'subscription_reactivation',
+            'subscription_amount_changes',
+            'subscription_date_changes',
+            'subscription_payment_method_change_customer',
+            'multiple_subscriptions',
+        );
 
         // Load settings
         $this->init_form_fields();
@@ -54,9 +64,20 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
         add_action('woocommerce_order_details_after_order_table', array($this, 'display_payment_status'), 10);
+        add_action('woocommerce_thankyou_' . $this->id, array($this, 'display_payment_status_thankyou'), 10);
 
         // Admin notice for incomplete configuration
         add_action('admin_notices', array($this, 'configuration_notice'));
+
+        // WooCommerce Subscriptions: handle scheduled renewal payments (manual mode)
+        if (class_exists('WC_Subscriptions_Order')) {
+            add_action(
+                'woocommerce_scheduled_subscription_payment_' . $this->id,
+                array($this, 'scheduled_subscription_payment'),
+                10,
+                2
+            );
+        }
     }
 
     // ------------------------------------------------------------------
@@ -420,6 +441,10 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
      */
     public function process_payment($order_id) {
         $order    = wc_get_order($order_id);
+        if (!$order) {
+            wc_add_notice(__('Order not found. Please try again.', '0xprocessing-for-woocommerce'), 'error');
+            return array('result' => 'failure');
+        }
         // Nonce is verified by WooCommerce core in WC_Checkout::process_checkout().
         // phpcs:ignore WordPress.Security.NonceVerification.Missing
         $currency = isset($_POST['oxprocessing_currency'])
@@ -509,10 +534,15 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
             'status'        => 'pending',
         ));
 
-        // Mark order as pending, reduce stock, clear cart
+        // Mark order as pending
         $order->update_status('pending', __('Awaiting cryptocurrency payment via 0xProcessing.', '0xprocessing-for-woocommerce'));
-        wc_reduce_stock_levels($order_id);
-        WC()->cart->empty_cart();
+
+        // Reduce stock and clear cart only for non-renewal orders.
+        // Renewal orders already had stock reduced on the original subscription order.
+        if (!$this->is_subscription_renewal($order)) {
+            wc_reduce_stock_levels($order_id);
+            WC()->cart->empty_cart();
+        }
 
         return array(
             'result'   => 'success',
@@ -695,5 +725,49 @@ class WC_0xProcessing_Gateway extends WC_Payment_Gateway {
         });
 
         return $currencies;
+    }
+
+    // ------------------------------------------------------------------
+    //  WooCommerce Subscriptions — manual renewal
+    // ------------------------------------------------------------------
+
+    /**
+     * Handle a scheduled subscription renewal payment.
+     *
+     * Since crypto is push-based (customer must send), we operate in "manual
+     * renewal" mode: the renewal order stays pending so WooCommerce
+     * Subscriptions sends the customer an invoice with a Pay link.  When the
+     * customer pays via the normal checkout flow, the webhook marks the
+     * renewal order as paid, which reactivates the subscription automatically.
+     *
+     * @param float    $renewal_total The renewal amount.
+     * @param WC_Order $renewal_order The renewal order.
+     */
+    public function scheduled_subscription_payment( $renewal_total, $renewal_order ) {
+        $renewal_order->add_order_note(
+            __( '0xProcessing: Subscription renewal due — awaiting manual crypto payment.', '0xprocessing-for-woocommerce' )
+        );
+
+        $this->api->log( 'info', sprintf(
+            'Subscription renewal pending for order #%d (total: %s)',
+            $renewal_order->get_id(),
+            $renewal_total
+        ) );
+
+        // The renewal order stays 'pending'. WooCommerce Subscriptions will
+        // put the subscription on-hold and email the customer an invoice.
+        // When the customer pays (webhook comes back), handle_success() will
+        // call payment_complete(), which WC Subscriptions listens for to
+        // reactivate the subscription.
+    }
+
+    /**
+     * Check if an order is a WooCommerce Subscriptions renewal order.
+     *
+     * @param WC_Order $order The order to check.
+     * @return bool
+     */
+    private function is_subscription_renewal( $order ) {
+        return function_exists( 'wcs_order_contains_renewal' ) && wcs_order_contains_renewal( $order );
     }
 }

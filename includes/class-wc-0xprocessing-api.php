@@ -154,7 +154,10 @@ class WC_0xProcessing_API {
             'ReturnUrl'  => 'true',
         ));
 
-        $this->log('info', 'Creating payment', $params);
+        // Log payment params (redact sensitive data)
+        $log_params = $params;
+        unset($log_params['Email']);
+        $this->log('info', 'Creating payment', $log_params);
 
         $response = wp_remote_post($this->api_url . '/Payment', array(
             'headers' => $this->get_form_headers(),

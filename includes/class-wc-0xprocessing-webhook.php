@@ -190,9 +190,18 @@ class WC_0xProcessing_Webhook {
         $order->update_meta_data('_oxprocessing_tx_hash', $tx_hash !== 'N/A' ? $tx_hash : '');
         $order->save();
 
-        // Update order status -- this automatically triggers WooCommerce emails
-        // so we do NOT call trigger() manually to avoid duplicates.
-        $order->update_status($order_status, '');
+        // Complete the payment. For subscription renewals, payment_complete() is
+        // the canonical method WooCommerce Subscriptions listens for.
+        // It sets the status to 'processing' (or 'completed' for virtual/downloadable),
+        // records the transaction ID, and fires 'woocommerce_payment_complete'.
+        $transaction_id = $tx_hash !== 'N/A' ? $tx_hash : '';
+        $order->payment_complete( $transaction_id );
+
+        // If the merchant chose 'completed' as the target status and payment_complete()
+        // set it to 'processing', upgrade it now.
+        if ( $order_status === 'completed' && $order->get_status() !== 'completed' ) {
+            $order->update_status( 'completed', '' );
+        }
 
         self::log('info', 'Payment success processed', array(
             'order_id'       => $order->get_id(),
@@ -218,9 +227,10 @@ class WC_0xProcessing_Webhook {
         $order->update_meta_data('_oxprocessing_payment_status', 'canceled');
         $order->save();
 
-        // Restore stock
-        if (function_exists('wc_increase_stock_levels')) {
-            wc_increase_stock_levels($order->get_id());
+        // Restore stock — but not for subscription renewals (stock belongs to the parent order)
+        $is_renewal = function_exists( 'wcs_order_contains_renewal' ) && wcs_order_contains_renewal( $order );
+        if ( ! $is_renewal && function_exists( 'wc_increase_stock_levels' ) ) {
+            wc_increase_stock_levels( $order->get_id() );
         }
 
         // Cancel order if still pending
