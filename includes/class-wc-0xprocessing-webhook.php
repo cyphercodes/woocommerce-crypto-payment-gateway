@@ -26,6 +26,12 @@ class WC_0xProcessing_Webhook {
      * @return WP_REST_Response
      */
     public static function handle_webhook($request) {
+        // 0xProcessing times out after 3 seconds. If they disconnect, PHP shouldn't abort, 
+        // otherwise payment_complete() will leave the order halfway completed.
+        if (function_exists('ignore_user_abort')) {
+            ignore_user_abort(true);
+        }
+
         $body = $request->get_body();
         $data = json_decode($body, true);
 
@@ -145,10 +151,24 @@ class WC_0xProcessing_Webhook {
      *                                 manually approved.
      */
     private static function handle_success($order, $data, $is_insufficient) {
-        // Check if already processed to avoid duplicate updates
+        $settings     = get_option('woocommerce_oxprocessing_settings');
+        $order_status = ($settings['order_status'] ?? 'processing');
         $current_status = $order->get_status();
-        if (in_array($current_status, array('processing', 'completed'), true)) {
-            self::log('info', 'Order already processed — skipping duplicate', array('order_id' => $order->get_id()));
+
+        // Check if already processed to avoid duplicate updates.
+        // We consider it fully processed if it has already reached the target $order_status,
+        // or if it's 'completed' (which is higher than 'processing').
+        if ($current_status === $order_status || $current_status === 'completed') {
+            self::log('info', 'Order already reached target status — skipping duplicate', array('order_id' => $order->get_id(), 'status' => $current_status));
+            return;
+        }
+
+        // If the order is currently 'processing' but our target is 'completed', 
+        // it means a previous webhook crashed half-way or payment_complete() left it in processing.
+        // In this case, we just upgrade the status and skip the rest of the payment_complete() logic.
+        if ($current_status === 'processing' && $order_status === 'completed') {
+            $order->update_status('completed', __('0xProcessing Webhook: Upgraded status from processing to completed via retry.', '0xprocessing-for-woocommerce'));
+            self::log('info', 'Order status upgraded on webhook retry', array('order_id' => $order->get_id()));
             return;
         }
 
