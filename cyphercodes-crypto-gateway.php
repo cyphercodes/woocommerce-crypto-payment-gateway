@@ -1,17 +1,18 @@
 <?php
 /**
- * Plugin Name: 0xProcessing for WooCommerce
- * Plugin URI: https://github.com/cyphercodes/woocommerce-crypto-payment-gateway
+ * Plugin Name: Cyphercodes Crypto Gateway for WooCommerce
+ * Plugin URI: https://github.com/cyphercodes/cyphercodes-crypto-gateway
  * Description: Accept cryptocurrency payments via 0xProcessing in your WooCommerce store
  * Version: 1.0.0
  * Author: Rayan Salhab
  * Author URI: https://github.com/cyphercodes
  * License: GPL v3 or later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
- * Text Domain: 0xprocessing-for-woocommerce
+ * Text Domain: cyphercodes-crypto-gateway
  * Domain Path: /languages
  * Requires at least: 6.2
  * Requires PHP: 7.4
+ * Requires Plugins: woocommerce
  * WC requires at least: 6.0
  * WC tested up to: 9.6
  */
@@ -21,29 +22,29 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WC_OXPROCESSING_VERSION', '1.0.0');
-define('WC_OXPROCESSING_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('WC_OXPROCESSING_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WC_OXPROCESSING_PLUGIN_FILE', __FILE__);
-define('WC_OXPROCESSING_API_URL', 'https://app.0xprocessing.com');
+define('CCGW_VERSION', '1.0.0');
+define('CCGW_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('CCGW_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('CCGW_PLUGIN_FILE', __FILE__);
+define('CCGW_API_URL', 'https://app.0xprocessing.com');
 
 /**
- * Class WC_0xProcessing_Main
+ * Class CCGW_Main
  * Main plugin class — singleton bootstrap
  */
-class WC_0xProcessing_Main {
+class CCGW_Main {
 
     /**
      * Single instance of the class
      *
-     * @var WC_0xProcessing_Main|null
+     * @var CCGW_Main|null
      */
     private static $instance = null;
 
     /**
      * Get single instance
      *
-     * @return WC_0xProcessing_Main
+     * @return CCGW_Main
      */
     public static function get_instance() {
         if (null === self::$instance) {
@@ -95,7 +96,7 @@ class WC_0xProcessing_Main {
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_settings_link'));
 
         // Clear currency cache when gateway settings are saved
-        add_action('woocommerce_update_options_payment_gateways_oxprocessing', array($this, 'clear_currency_cache'));
+        add_action('woocommerce_update_options_payment_gateways_ccgw', array($this, 'clear_currency_cache'));
 
         // Admin notice when webhook password is missing
         add_action('admin_notices', array($this, 'webhook_password_missing_notice'));
@@ -105,10 +106,10 @@ class WC_0xProcessing_Main {
      * Include required files
      */
     private function includes() {
-        require_once WC_OXPROCESSING_PLUGIN_DIR . 'includes/class-wc-0xprocessing-api.php';
-        require_once WC_OXPROCESSING_PLUGIN_DIR . 'includes/class-wc-0xprocessing-gateway.php';
-        require_once WC_OXPROCESSING_PLUGIN_DIR . 'includes/class-wc-0xprocessing-webhook.php';
-        require_once WC_OXPROCESSING_PLUGIN_DIR . 'includes/class-wc-0xprocessing-database.php';
+        require_once CCGW_PLUGIN_DIR . 'includes/class-ccgw-api.php';
+        require_once CCGW_PLUGIN_DIR . 'includes/class-ccgw-gateway.php';
+        require_once CCGW_PLUGIN_DIR . 'includes/class-ccgw-webhook.php';
+        require_once CCGW_PLUGIN_DIR . 'includes/class-ccgw-database.php';
     }
 
     /**
@@ -118,7 +119,7 @@ class WC_0xProcessing_Main {
      * @return array
      */
     public function add_gateway($gateways) {
-        $gateways[] = 'WC_0xProcessing_Gateway';
+        $gateways[] = 'CCGW_Gateway';
         return $gateways;
     }
 
@@ -126,13 +127,19 @@ class WC_0xProcessing_Main {
      * Register webhook REST endpoint
      */
     public function register_webhook_endpoint() {
-        register_rest_route('oxprocessing/v1', '/webhook', array(
+        // Webhook endpoint: must be publicly accessible because 0xProcessing's
+        // servers POST status updates here. Authentication is handled inside the
+        // callback via MD5 signature verification (CCGW_Webhook::verify_signature).
+        register_rest_route('ccgw/v1', '/webhook', array(
             'methods'             => 'POST',
-            'callback'            => array('WC_0xProcessing_Webhook', 'handle_webhook'),
+            'callback'            => array('CCGW_Webhook', 'handle_webhook'),
             'permission_callback' => '__return_true',
         ));
 
-        register_rest_route('oxprocessing/v1', '/currencies', array(
+        // Currencies endpoint: returns a non-sensitive, publicly-cacheable list
+        // of supported cryptocurrencies. No capability check needed because this
+        // data is already visible on the public checkout page.
+        register_rest_route('ccgw/v1', '/currencies', array(
             'methods'             => 'GET',
             'callback'            => array($this, 'get_currencies_ajax'),
             'permission_callback' => '__return_true',
@@ -145,7 +152,7 @@ class WC_0xProcessing_Main {
      * @return WP_REST_Response
      */
     public function get_currencies_ajax() {
-        $api        = new WC_0xProcessing_API();
+        $api        = new CCGW_API();
         $currencies = $api->get_coins();
 
         if ($currencies) {
@@ -159,7 +166,7 @@ class WC_0xProcessing_Main {
      * Clear cached currency list (used when settings are saved)
      */
     public function clear_currency_cache() {
-        delete_transient('oxprocessing_currencies');
+        delete_transient('ccgw_currencies');
     }
 
     /**
@@ -175,23 +182,23 @@ class WC_0xProcessing_Main {
         wp_enqueue_script('select2');
 
         wp_enqueue_style(
-            'wc-oxprocessing-style',
-            WC_OXPROCESSING_PLUGIN_URL . 'assets/css/oxprocessing.css',
+            'ccgw-checkout-style',
+            CCGW_PLUGIN_URL . 'assets/css/ccgw-checkout.css',
             array('select2'),
-            WC_OXPROCESSING_VERSION
+            CCGW_VERSION
         );
 
         wp_enqueue_script(
-            'wc-oxprocessing-script',
-            WC_OXPROCESSING_PLUGIN_URL . 'assets/js/oxprocessing.js',
+            'ccgw-checkout-script',
+            CCGW_PLUGIN_URL . 'assets/js/ccgw-checkout.js',
             array('jquery', 'select2'),
-            WC_OXPROCESSING_VERSION,
+            CCGW_VERSION,
             true
         );
 
-        wp_localize_script('wc-oxprocessing-script', 'oxprocessing_params', array(
+        wp_localize_script('ccgw-checkout-script', 'ccgw_params', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'rest_url' => rest_url('oxprocessing/v1/'),
+            'rest_url' => rest_url('ccgw/v1/'),
             'nonce'    => wp_create_nonce('wp_rest'),
         ));
 
@@ -205,10 +212,10 @@ class WC_0xProcessing_Main {
      */
     private function enqueue_theme_overrides() {
         $gateways = WC()->payment_gateways()->payment_gateways();
-        if (!isset($gateways['oxprocessing'])) {
+        if (!isset($gateways['ccgw'])) {
             return;
         }
-        $gateway = $gateways['oxprocessing'];
+        $gateway = $gateways['ccgw'];
 
         // Preset definitions
         $presets = array(
@@ -251,7 +258,7 @@ class WC_0xProcessing_Main {
             'theme_border_radius'        => '--oxp-radius',
         );
 
-        // Light defaults (CSS defaults in oxprocessing.css)
+        // Light defaults (CSS defaults in ccgw-checkout.css)
         $light_defaults = $presets['light'];
 
         $vars = array();
@@ -300,7 +307,7 @@ class WC_0xProcessing_Main {
         $icon_css = '';
         if (isset($icon_sizes[$icon_size])) {
             $px = $icon_sizes[$icon_size];
-            $icon_css = '.payment_method_oxprocessing img { max-height: ' . $px . '; width: auto; }';
+            $icon_css = '.payment_method_ccgw img { max-height: ' . $px . '; width: auto; }';
         }
 
         $css = '';
@@ -331,83 +338,83 @@ class WC_0xProcessing_Main {
 
             $css .= '
             /* === Dark mode overrides === */
-            .payment_method_oxprocessing .payment_box {
+            .payment_method_ccgw .payment_box {
                 background: ' . $bg . ' !important;
                 color: ' . $text . ' !important;
                 border-color: ' . $border . ' !important;
             }
-            .payment_method_oxprocessing .payment_box::before,
-            .payment_method_oxprocessing .payment_box::after {
+            .payment_method_ccgw .payment_box::before,
+            .payment_method_ccgw .payment_box::after {
                 border-bottom-color: ' . $bg . ' !important;
                 border-top-color: ' . $bg . ' !important;
             }
-            .payment_method_oxprocessing .oxprocessing-currency-selector {
+            .payment_method_ccgw .ccgw-currency-selector {
                 background: ' . $bg_alt . ' !important;
                 border-color: ' . $border . ' !important;
             }
-            .payment_method_oxprocessing .oxprocessing-currency-selector label {
+            .payment_method_ccgw .ccgw-currency-selector label {
                 color: var(--oxp-accent) !important;
             }
             /* Select2 closed state — scoped by payment method parent */
-            .payment_method_oxprocessing .select2-container .select2-selection--single {
+            .payment_method_ccgw .select2-container .select2-selection--single {
                 background: ' . $bg_inp . ' !important;
                 border-color: ' . $border . ' !important;
                 color: ' . $text . ' !important;
             }
-            .payment_method_oxprocessing .select2-container .select2-selection__rendered {
+            .payment_method_ccgw .select2-container .select2-selection__rendered {
                 color: ' . $text . ' !important;
             }
-            .payment_method_oxprocessing .select2-container .select2-selection__placeholder {
+            .payment_method_ccgw .select2-container .select2-selection__placeholder {
                 color: ' . $muted . ' !important;
             }
-            .payment_method_oxprocessing .select2-container .select2-selection__arrow b {
+            .payment_method_ccgw .select2-container .select2-selection__arrow b {
                 border-color: ' . $muted . ' transparent transparent transparent !important;
             }
-            .payment_method_oxprocessing .select2-container--open .select2-selection__arrow b {
+            .payment_method_ccgw .select2-container--open .select2-selection__arrow b {
                 border-color: transparent transparent ' . $muted . ' transparent !important;
             }
             /* Select2 dropdown panel (appended to body — uses dropdownCssClass) */
-            .oxprocessing-select2-dropdown,
-            .oxprocessing-select2-dropdown .select2-results,
-            .oxprocessing-select2-dropdown .select2-search--dropdown {
+            .ccgw-select2-dropdown,
+            .ccgw-select2-dropdown .select2-results,
+            .ccgw-select2-dropdown .select2-search--dropdown {
                 background: ' . $bg . ' !important;
                 border-color: ' . $border . ' !important;
             }
-            .oxprocessing-select2-dropdown .select2-search__field {
+            .ccgw-select2-dropdown .select2-search__field {
                 background: ' . $bg_inp . ' !important;
                 border-color: ' . $border . ' !important;
                 color: ' . $text . ' !important;
             }
-            .oxprocessing-select2-dropdown .select2-search__field::placeholder {
+            .ccgw-select2-dropdown .select2-search__field::placeholder {
                 color: ' . $muted . ' !important;
             }
-            .oxprocessing-select2-dropdown .select2-results__option {
+            .ccgw-select2-dropdown .select2-results__option {
                 background: ' . $bg . ' !important;
                 color: ' . $text . ' !important;
                 border-bottom-color: ' . $border . ' !important;
             }
-            .oxprocessing-select2-dropdown .select2-results__option--highlighted,
-            .oxprocessing-select2-dropdown .select2-results__option--highlighted.select2-results__option--selectable {
+            .ccgw-select2-dropdown .select2-results__option--highlighted,
+            .ccgw-select2-dropdown .select2-results__option--highlighted.select2-results__option--selectable {
                 background: ' . $bg_alt . ' !important;
                 color: ' . $text . ' !important;
             }
-            .oxprocessing-select2-dropdown .select2-results__option--selected,
-            .oxprocessing-select2-dropdown .select2-results__option[aria-selected="true"] {
+            .ccgw-select2-dropdown .select2-results__option--selected,
+            .ccgw-select2-dropdown .select2-results__option[aria-selected="true"] {
                 background: var(--oxp-accent) !important;
                 color: #ffffff !important;
             }
             /* WooCommerce description text */
-            .payment_method_oxprocessing .payment_box p {
+            .payment_method_ccgw .payment_box p {
                 color: ' . $text . ' !important;
             }
-            .payment_method_oxprocessing .oxprocessing-currency-selector .description {
+            .payment_method_ccgw .ccgw-currency-selector .description {
                 color: ' . $muted . ' !important;
             }
             ';
         }
 
         if (!empty($css)) {
-            wp_add_inline_style('wc-oxprocessing-style', $css);
+            wp_add_inline_style('ccgw-checkout-style', $css);
         }
     }
 
@@ -478,10 +485,10 @@ class WC_0xProcessing_Main {
         }
 
         wp_enqueue_style(
-            'wc-oxprocessing-admin-style',
-            WC_OXPROCESSING_PLUGIN_URL . 'assets/css/admin.css',
+            'ccgw-admin-style',
+            CCGW_PLUGIN_URL . 'assets/css/admin.css',
             array(),
-            WC_OXPROCESSING_VERSION
+            CCGW_VERSION
         );
 
         // Inline JS for theme preset auto-fill
@@ -512,13 +519,13 @@ class WC_0xProcessing_Main {
                 }
             };
 
-            $('#woocommerce_oxprocessing_theme_preset').on('change', function() {
+            $('#woocommerce_ccgw_theme_preset').on('change', function() {
                 var preset = $(this).val();
                 if (preset === 'custom') return;
                 var values = presets[preset];
                 if (!values) return;
                 $.each(values, function(key, val) {
-                    var field = $('#woocommerce_oxprocessing_' + key);
+                    var field = $('#woocommerce_ccgw_' + key);
                     if (field.length) {
                         field.val(val).trigger('change');
                         // Update WP color picker swatch if present
@@ -540,8 +547,8 @@ class WC_0xProcessing_Main {
      * @return array
      */
     public function add_settings_link($links) {
-        $url = admin_url('admin.php?page=wc-settings&tab=checkout&section=oxprocessing');
-        array_unshift($links, '<a href="' . esc_url($url) . '">' . esc_html__('Settings', '0xprocessing-for-woocommerce') . '</a>');
+        $url = admin_url('admin.php?page=wc-settings&tab=checkout&section=ccgw');
+        array_unshift($links, '<a href="' . esc_url($url) . '">' . esc_html__('Settings', 'cyphercodes-crypto-gateway') . '</a>');
         return $links;
     }
 
@@ -550,7 +557,7 @@ class WC_0xProcessing_Main {
      */
     public function woocommerce_missing_notice() {
         echo '<div class="error"><p>'
-            . esc_html__('0xProcessing for WooCommerce requires WooCommerce to be installed and active.', '0xprocessing-for-woocommerce')
+            . esc_html__('Cyphercodes Crypto Gateway for WooCommerce requires WooCommerce to be installed and active.', 'cyphercodes-crypto-gateway')
             . '</p></div>';
     }
 
@@ -564,7 +571,7 @@ class WC_0xProcessing_Main {
             return;
         }
 
-        $settings = get_option('woocommerce_oxprocessing_settings');
+        $settings = get_option('woocommerce_ccgw_settings');
         if (!is_array($settings)) {
             return;
         }
@@ -572,9 +579,9 @@ class WC_0xProcessing_Main {
         // Only show if gateway is enabled but password is empty
         if (($settings['enabled'] ?? 'no') === 'yes' && empty($settings['webhook_password'])) {
             echo '<div class="notice notice-warning"><p>'
-                . esc_html__('⚠️ 0xProcessing: Webhook password is not set. Webhook signature verification is disabled, which is insecure. Please set a webhook password in ', '0xprocessing-for-woocommerce')
-                . '<a href="' . esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=oxprocessing')) . '">'
-                . esc_html__('payment settings', '0xprocessing-for-woocommerce')
+                . esc_html__('⚠️ Cyphercodes Crypto Gateway: Webhook password is not set. Webhook signature verification is disabled, which is insecure. Please set a webhook password in ', 'cyphercodes-crypto-gateway')
+                . '<a href="' . esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=ccgw')) . '">'
+                . esc_html__('payment settings', 'cyphercodes-crypto-gateway')
                 . '</a>.</p></div>';
         }
     }
@@ -584,9 +591,9 @@ class WC_0xProcessing_Main {
      */
     public function activate() {
         // The includes() method hasn't run yet during activation, so load explicitly
-        require_once WC_OXPROCESSING_PLUGIN_DIR . 'includes/class-wc-0xprocessing-database.php';
+        require_once CCGW_PLUGIN_DIR . 'includes/class-ccgw-database.php';
 
-        $database = new WC_0xProcessing_Database();
+        $database = new CCGW_Database();
         $database->create_table();
 
         flush_rewrite_rules();
@@ -601,4 +608,4 @@ class WC_0xProcessing_Main {
 }
 
 // Initialize plugin
-WC_0xProcessing_Main::get_instance();
+CCGW_Main::get_instance();

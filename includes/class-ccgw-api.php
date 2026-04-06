@@ -1,17 +1,17 @@
 <?php
 /**
- * 0xProcessing API Client
+ * Cyphercodes Crypto Gateway — API Client
  *
  * Handles all HTTP communication with the 0xProcessing REST API.
  *
- * @package WC_0xProcessing
+ * @package CCGW
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-class WC_0xProcessing_API {
+class CCGW_API {
 
     /** @var string */
     private $api_url;
@@ -33,9 +33,9 @@ class WC_0xProcessing_API {
      * have not been saved yet.
      */
     public function __construct() {
-        $this->api_url = WC_OXPROCESSING_API_URL;
+        $this->api_url = CCGW_API_URL;
 
-        $settings = get_option('woocommerce_oxprocessing_settings');
+        $settings = get_option('woocommerce_ccgw_settings');
         if (!is_array($settings)) {
             $settings = array();
         }
@@ -121,14 +121,14 @@ class WC_0xProcessing_API {
             return new WP_Error(
                 'http_error',
                 /* translators: %d: HTTP status code */
-                sprintf(__('0xProcessing returned HTTP %d', '0xprocessing-for-woocommerce'), $http_code)
+                sprintf(__('0xProcessing returned HTTP %d', 'cyphercodes-crypto-gateway'), $http_code)
             );
         }
 
         $data = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->log('error', $context . ' JSON decode error: ' . json_last_error_msg());
-            return new WP_Error('json_error', __('Failed to parse API response', '0xprocessing-for-woocommerce'));
+            return new WP_Error('json_error', __('Failed to parse API response', 'cyphercodes-crypto-gateway'));
         }
 
         return $data;
@@ -430,13 +430,13 @@ class WC_0xProcessing_API {
      * @param mixed  $data    Optional data to include.
      */
     public function log($level, $message, $data = null) {
-        $full = '[0xProcessing] ' . $message;
+        $full = '[CCGW] ' . $message;
         if ($data !== null) {
             $full .= ' | ' . wp_json_encode($data);
         }
 
         if ($this->logger) {
-            $this->logger->log($level, $full, array('source' => 'oxprocessing'));
+            $this->logger->log($level, $full, array('source' => 'ccgw'));
         }
 
         if (defined('WP_DEBUG') && WP_DEBUG) {

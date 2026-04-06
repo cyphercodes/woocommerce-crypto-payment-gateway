@@ -1,5 +1,5 @@
-=== 0xProcessing for WooCommerce ===
-Contributors: cyphercodes
+=== Cyphercodes Crypto Gateway for WooCommerce ===
+Contributors: rayansalhab
 Tags: cryptocurrency, bitcoin, payment gateway, woocommerce, crypto
 Requires at least: 6.2
 Tested up to: 6.9
@@ -12,7 +12,7 @@ Accept cryptocurrency payments in your WooCommerce store via 0xProcessing. Suppo
 
 == Description ==
 
-**0xProcessing for WooCommerce** enables your store to accept cryptocurrency payments through [0xProcessing](https://0xprocessing.com), a secure payment processor supporting 50+ cryptocurrencies.
+**Cyphercodes Crypto Gateway for WooCommerce** enables your store to accept cryptocurrency payments through [0xProcessing](https://0xprocessing.com), a secure payment processor supporting 50+ cryptocurrencies.
 
 = Key Features =
 
@@ -24,7 +24,7 @@ Accept cryptocurrency payments in your WooCommerce store via 0xProcessing. Suppo
 * **Real-Time Updates** — Automatic order status updates via webhooks
 * **Underpayment Handling** — Configurable handling of insufficient payments
 * **Payment Tracking** — Custom database table for analytics and reporting
-* **Theme Compatible** — Clean, minimal styles with CSS custom properties for easy theming
+* **Theme Customization** — Built-in light/dark/custom presets with CSS custom properties for easy theming
 
 = How It Works =
 
@@ -36,7 +36,7 @@ Accept cryptocurrency payments in your WooCommerce store via 0xProcessing. Suppo
 
 = Requirements =
 
-* WordPress 5.8+
+* WordPress 6.2+
 * WooCommerce 6.0+
 * PHP 7.4+
 * SSL Certificate (HTTPS)
@@ -44,15 +44,13 @@ Accept cryptocurrency payments in your WooCommerce store via 0xProcessing. Suppo
 
 == Installation ==
 
-1. Upload the `wc-0xprocessing` folder to `/wp-content/plugins/`
+1. Upload the plugin folder to `/wp-content/plugins/`
 2. Activate the plugin through the **Plugins** menu in WordPress
 3. Go to **WooCommerce → Settings → Payments → 0xProcessing Crypto**
 4. Enter your Merchant ID, API Key, and Webhook Password
 5. Set your webhook URL in the 0xProcessing dashboard:
-   `https://yourdomain.com/wp-json/oxprocessing/v1/webhook`
+   `https://yourdomain.com/wp-json/ccgw/v1/webhook`
 6. Enable the gateway and start accepting crypto payments
-
-For detailed setup instructions, see the [GitHub documentation](https://github.com/cyphercodes/wc-0xprocessing).
 
 == Frequently Asked Questions ==
 
@@ -78,7 +76,7 @@ The order is placed on hold and the admin receives an email notification. You ca
 
 = Can I customize the checkout appearance? =
 
-Yes. All colors are defined as CSS custom properties (`--oxp-*`). Override them in your theme's stylesheet:
+Yes. The plugin includes built-in Light, Dark, and Custom theme presets accessible from WooCommerce → Settings → Payments. All colors are defined as CSS custom properties (`--oxp-*`) and can also be overridden in your theme's stylesheet:
 
 `
 :root {
@@ -109,9 +107,10 @@ All plugin data is cleaned up: the custom database table is dropped, plugin opti
 * Active currency filtering
 * Configurable order status
 * Payment status banners
+* Light/Dark/Custom theme presets
 * Clean uninstall
 
 == Upgrade Notice ==
 
 = 1.0.0 =
-Initial release of 0xProcessing for WooCommerce.
+Initial release of Cyphercodes Crypto Gateway for WooCommerce.

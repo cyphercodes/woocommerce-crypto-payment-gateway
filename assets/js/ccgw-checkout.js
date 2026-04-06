@@ -1,5 +1,5 @@
 /**
- * 0xProcessing for WooCommerce - Frontend JavaScript
+ * Cyphercodes Crypto Gateway - Frontend JavaScript
  * Enhanced with Select2 for modern searchable dropdown
  */
 
@@ -7,7 +7,7 @@
     'use strict';
 
     // Main object
-    var OXProcessing = {
+    var CCGWCheckout = {
 
         /**
          * Initialize
@@ -21,7 +21,7 @@
          * Bind events
          */
         bindEvents: function () {
-            $(document).on('change', '#oxprocessing_currency', this.handleCurrencyChange.bind(this));
+            $(document).on('change', '#ccgw_currency', this.handleCurrencyChange.bind(this));
             $(document.body).on('updated_checkout', this.initCurrencySelector.bind(this));
         },
 
@@ -45,16 +45,16 @@
                 return item.text; // Placeholder
             }
 
-            var parsed = OXProcessing.parseCurrency(item.text);
+            var parsed = CCGWCheckout.parseCurrency(item.text);
             var initials = parsed.symbol.substring(0, 3);
 
-            var $badge = $('<span class="oxprocessing-currency-icon-small">' + initials + '</span>');
+            var $badge = $('<span class="ccgw-currency-icon-small">' + initials + '</span>');
             var label = parsed.network
                 ? '<strong>' + parsed.symbol + '</strong> <span style="opacity:0.6;">(' + parsed.network + ')</span>'
                 : '<strong>' + parsed.symbol + '</strong>';
-            var $label = $('<span class="oxprocessing-currency-name">' + label + '</span>');
+            var $label = $('<span class="ccgw-currency-name">' + label + '</span>');
 
-            var $container = $('<span class="oxprocessing-currency-option"></span>');
+            var $container = $('<span class="ccgw-currency-option"></span>');
             $container.append($badge).append($label);
             return $container;
         },
@@ -66,7 +66,7 @@
             if (!item.id) {
                 return item.text;
             }
-            var parsed = OXProcessing.parseCurrency(item.text);
+            var parsed = CCGWCheckout.parseCurrency(item.text);
             if (parsed.network) {
                 return parsed.symbol + ' (' + parsed.network + ')';
             }
@@ -77,7 +77,7 @@
          * Initialize currency selector with Select2
          */
         initCurrencySelector: function () {
-            var $selector = $('#oxprocessing_currency');
+            var $selector = $('#ccgw_currency');
 
             if ($selector.length === 0) {
                 return;
@@ -93,8 +93,8 @@
                 placeholder: '-- Select Currency --',
                 allowClear: false,
                 width: '100%',
-                dropdownCssClass: 'oxprocessing-select2-dropdown',
-                containerCssClass: 'oxprocessing-select2-container',
+                dropdownCssClass: 'ccgw-select2-dropdown',
+                containerCssClass: 'ccgw-select2-container',
                 minimumResultsForSearch: 5,
                 templateResult: this.formatCurrency,
                 templateSelection: this.formatCurrencySelection
@@ -119,7 +119,7 @@
          * Validate form before submission
          */
         validateForm: function () {
-            var $currency = $('#oxprocessing_currency');
+            var $currency = $('#ccgw_currency');
 
             if ($currency.length && !$currency.val()) {
                 this.showError('Please select a cryptocurrency for payment.');
@@ -161,10 +161,10 @@
 
     // Initialize on document ready
     $(document).ready(function () {
-        OXProcessing.init();
+        CCGWCheckout.init();
     });
 
     // Expose to global scope for debugging
-    window.OXProcessing = OXProcessing;
+    window.CCGWCheckout = CCGWCheckout;
 
 })(jQuery);

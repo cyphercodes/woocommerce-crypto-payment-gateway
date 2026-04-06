@@ -1,22 +1,22 @@
 <?php
 /**
- * 0xProcessing Webhook Handler
+ * Cyphercodes Crypto Gateway — Webhook Handler
  *
  * Processes incoming payment status webhooks from 0xProcessing.
  * Per 0xProcessing docs: MUST respond with HTTP 200 within 3 seconds or
  * they will retry 31 times at 15-second intervals.
  *
- * @package WC_0xProcessing
+ * @package CCGW
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-class WC_0xProcessing_Webhook {
+class CCGW_Webhook {
 
     /**
-     * Handle webhook POST (called by REST route oxprocessing/v1/webhook).
+     * Handle webhook POST (called by REST route ccgw/v1/webhook).
      *
      * CRITICAL: Per 0xProcessing docs, we MUST return HTTP 200 to acknowledge
      * receipt — even if validation fails or orders are missing. Otherwise they
@@ -45,7 +45,7 @@ class WC_0xProcessing_Webhook {
         }
 
         // Signature verification
-        $settings = get_option('woocommerce_oxprocessing_settings');
+        $settings = get_option('woocommerce_ccgw_settings');
         if (!is_array($settings)) {
             $settings = array();
         }
@@ -58,7 +58,7 @@ class WC_0xProcessing_Webhook {
         }
 
         // Handle test webhooks
-        if (isset($data['Test']) && $data['Test'] === true) {
+        if (isset($data['Test']) && filter_var($data['Test'], FILTER_VALIDATE_BOOLEAN)) {
             self::log('info', 'Test webhook received — not updating real orders', $data);
             // Important: return early so test webhooks never affect real orders
             return new WP_REST_Response(array('status' => 'ok', 'test' => true), 200);
@@ -68,7 +68,7 @@ class WC_0xProcessing_Webhook {
         // Race condition: webhook can arrive before process_payment() saves to DB.
         // Fallback 1: check BillingID (= order_id)
         // Fallback 2: check order meta for payment_id
-        $database = new WC_0xProcessing_Database();
+        $database = new CCGW_Database();
         $payment_record = $database->get_payment_by_payment_id($data['PaymentId']);
 
         $order_id = null;
@@ -83,7 +83,7 @@ class WC_0xProcessing_Webhook {
             // Last resort: search all orders with matching payment_id
             $orders = wc_get_orders(array(
                 'limit'      => 1,
-                'meta_key'   => '_oxprocessing_payment_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required for payment lookup.
+                'meta_key'   => '_ccgw_payment_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required for payment lookup.
                 'meta_value' => $data['PaymentId'], // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Required for payment lookup.
             ));
             if ($orders && count($orders) > 0) {
@@ -105,7 +105,7 @@ class WC_0xProcessing_Webhook {
 
         // Process payment status -------------------------------------------------
         $status         = $data['Status'];
-        $is_insufficient = isset($data['Insufficient']) && $data['Insufficient'] === true;
+        $is_insufficient = isset($data['Insufficient']) && filter_var($data['Insufficient'], FILTER_VALIDATE_BOOLEAN);
 
         switch ($status) {
             case 'Success':
@@ -151,13 +151,11 @@ class WC_0xProcessing_Webhook {
      *                                 manually approved.
      */
     private static function handle_success($order, $data, $is_insufficient) {
-        $settings     = get_option('woocommerce_oxprocessing_settings');
+        $settings     = get_option('woocommerce_ccgw_settings');
         $order_status = ($settings['order_status'] ?? 'processing');
         $current_status = $order->get_status();
 
         // Check if already processed to avoid duplicate updates.
-        // We consider it fully processed if it has already reached the target $order_status,
-        // or if it's 'completed' (which is higher than 'processing').
         if ($current_status === $order_status || $current_status === 'completed') {
             self::log('info', 'Order already reached target status — skipping duplicate', array('order_id' => $order->get_id(), 'status' => $current_status));
             return;
@@ -165,15 +163,11 @@ class WC_0xProcessing_Webhook {
 
         // If the order is currently 'processing' but our target is 'completed', 
         // it means a previous webhook crashed half-way or payment_complete() left it in processing.
-        // In this case, we just upgrade the status and skip the rest of the payment_complete() logic.
         if ($current_status === 'processing' && $order_status === 'completed') {
-            $order->update_status('completed', __('0xProcessing Webhook: Upgraded status from processing to completed via retry.', '0xprocessing-for-woocommerce'));
+            $order->update_status('completed', __('0xProcessing Webhook: Upgraded status from processing to completed via retry.', 'cyphercodes-crypto-gateway'));
             self::log('info', 'Order status upgraded on webhook retry', array('order_id' => $order->get_id()));
             return;
         }
-
-        $settings     = get_option('woocommerce_oxprocessing_settings');
-        $order_status = ($settings['order_status'] ?? 'processing');
 
         // Build note
         $amount     = $data['Amount'] ?? '0';
@@ -184,7 +178,7 @@ class WC_0xProcessing_Webhook {
         if ($is_insufficient) {
             $note = sprintf(
                 /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
-                __('0xProcessing payment confirmed (UNDERPAID). Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', '0xprocessing-for-woocommerce'),
+                __('0xProcessing payment confirmed (UNDERPAID). Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', 'cyphercodes-crypto-gateway'),
                 $amount,
                 $currency,
                 $amount_usd,
@@ -193,7 +187,7 @@ class WC_0xProcessing_Webhook {
         } else {
             $note = sprintf(
                 /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value, %4$s: transaction hash */
-                __('0xProcessing payment successful. Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', '0xprocessing-for-woocommerce'),
+                __('0xProcessing payment successful. Received: %1$s %2$s (~$%3$s USD). Transaction: %4$s', 'cyphercodes-crypto-gateway'),
                 $amount,
                 $currency,
                 $amount_usd,
@@ -204,16 +198,14 @@ class WC_0xProcessing_Webhook {
         $order->add_order_note($note);
 
         // Persist payment metadata (HPOS-compatible)
-        $order->update_meta_data('_oxprocessing_payment_status', 'success');
-        $order->update_meta_data('_oxprocessing_amount_paid', $amount);
-        $order->update_meta_data('_oxprocessing_amount_usd', $data['AmountUSD'] ?? 0);
-        $order->update_meta_data('_oxprocessing_tx_hash', $tx_hash !== 'N/A' ? $tx_hash : '');
+        $order->update_meta_data('_ccgw_payment_status', 'success');
+        $order->update_meta_data('_ccgw_amount_paid', $amount);
+        $order->update_meta_data('_ccgw_amount_usd', $data['AmountUSD'] ?? 0);
+        $order->update_meta_data('_ccgw_tx_hash', $tx_hash !== 'N/A' ? $tx_hash : '');
         $order->save();
 
         // Complete the payment. For subscription renewals, payment_complete() is
         // the canonical method WooCommerce Subscriptions listens for.
-        // It sets the status to 'processing' (or 'completed' for virtual/downloadable),
-        // records the transaction ID, and fires 'woocommerce_payment_complete'.
         $transaction_id = $tx_hash !== 'N/A' ? $tx_hash : '';
         $order->payment_complete( $transaction_id );
 
@@ -239,12 +231,12 @@ class WC_0xProcessing_Webhook {
     private static function handle_canceled($order, $data) {
         $note = sprintf(
             /* translators: %s: cryptocurrency name */
-            __('0xProcessing payment CANCELED. Payment window expired without funds. Currency: %s', '0xprocessing-for-woocommerce'),
+            __('0xProcessing payment CANCELED. Payment window expired without funds. Currency: %s', 'cyphercodes-crypto-gateway'),
             $data['Currency'] ?? 'N/A'
         );
 
         $order->add_order_note($note);
-        $order->update_meta_data('_oxprocessing_payment_status', 'canceled');
+        $order->update_meta_data('_ccgw_payment_status', 'canceled');
         $order->save();
 
         // Restore stock — but not for subscription renewals (stock belongs to the parent order)
@@ -255,7 +247,7 @@ class WC_0xProcessing_Webhook {
 
         // Cancel order if still pending
         if ($order->get_status() === 'pending') {
-            $order->update_status('cancelled', __('Crypto payment window expired.', '0xprocessing-for-woocommerce'));
+            $order->update_status('cancelled', __('Crypto payment window expired.', 'cyphercodes-crypto-gateway'));
         }
 
         self::log('info', 'Payment canceled', array('order_id' => $order->get_id()));
@@ -270,22 +262,22 @@ class WC_0xProcessing_Webhook {
     private static function handle_insufficient($order, $data) {
         $note = sprintf(
             /* translators: %1$s: crypto amount, %2$s: currency name, %3$s: USD value */
-            __('0xProcessing payment INSUFFICIENT. Received: %1$s %2$s (~$%3$s USD). Awaiting merchant confirmation.', '0xprocessing-for-woocommerce'),
+            __('0xProcessing payment INSUFFICIENT. Received: %1$s %2$s (~$%3$s USD). Awaiting merchant confirmation.', 'cyphercodes-crypto-gateway'),
             $data['Amount'] ?? '0',
             $data['Currency'] ?? 'N/A',
             isset($data['AmountUSD']) ? number_format((float) $data['AmountUSD'], 2) : 'N/A'
         );
 
         $order->add_order_note($note);
-        $order->update_meta_data('_oxprocessing_payment_status', 'insufficient');
-        $order->update_meta_data('_oxprocessing_amount_received', $data['Amount'] ?? '0');
-        $order->update_status('on-hold', __('Awaiting confirmation of underpayment.', '0xprocessing-for-woocommerce'));
+        $order->update_meta_data('_ccgw_payment_status', 'insufficient');
+        $order->update_meta_data('_ccgw_amount_received', $data['Amount'] ?? '0');
         $order->save();
+        $order->update_status('on-hold', __('Awaiting confirmation of underpayment.', 'cyphercodes-crypto-gateway'));
 
         // Notify admin
         $admin_email = get_option('admin_email');
         /* translators: %1$s: site name, %2$s: order number */
-        $subject     = sprintf(__('[%1$s] Insufficient payment for order #%2$s', '0xprocessing-for-woocommerce'), get_bloginfo('name'), $order->get_order_number());
+        $subject     = sprintf(__('[%1$s] Insufficient payment for order #%2$s', 'cyphercodes-crypto-gateway'), get_bloginfo('name'), $order->get_order_number());
         wp_mail($admin_email, $subject, $note);
 
         self::log('info', 'Insufficient payment', array('order_id' => $order->get_id()));
@@ -346,7 +338,7 @@ class WC_0xProcessing_Webhook {
      * @param mixed  $data    Optional data to include.
      */
     private static function log($level, $message, $data = null) {
-        $full = '[0xProcessing Webhook] ' . $message;
+        $full = '[CCGW Webhook] ' . $message;
         if ($data !== null) {
             $full .= ' | ' . wp_json_encode($data);
         }
@@ -354,7 +346,7 @@ class WC_0xProcessing_Webhook {
         // WooCommerce logger
         if (function_exists('wc_get_logger')) {
             $logger = wc_get_logger();
-            $logger->log($level, $full, array('source' => 'oxprocessing-webhook'));
+            $logger->log($level, $full, array('source' => 'ccgw-webhook'));
         }
 
         // Fallback to PHP error_log if WP_DEBUG enabled

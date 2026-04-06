@@ -1,43 +1,59 @@
 <?php
 /**
- * Uninstall script for 0xProcessing for WooCommerce
+ * Cyphercodes Crypto Gateway — Uninstall
  *
- * This script runs when the plugin is deleted via the WordPress admin.
- * It removes custom database tables and plugin options.
+ * Removes all plugin data when uninstalled via the WordPress admin.
  *
- * @package WC_0xProcessing
+ * @package CCGW
  */
 
-// If uninstall not called from WordPress, exit
 if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
-// Load WP database globals
 global $wpdb;
 
-// Delete plugin options
-delete_option('woocommerce_oxprocessing_settings');
-delete_option('oxprocessing_db_version');
+// 1. Delete plugin options
+delete_option('woocommerce_ccgw_settings');
+delete_option('ccgw_db_version');
 
-// Delete transients
-delete_transient('oxprocessing_currencies');
-
-// Drop custom table
-$table_name = esc_sql($wpdb->prefix . 'oxprocessing_payments');
+// 2. Drop custom database table
+$table_name = $wpdb->prefix . 'ccgw_payments';
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 $wpdb->query("DROP TABLE IF EXISTS {$table_name}");
 
-// Delete all order meta keys
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-$wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '_oxprocessing_%'");
+// 3. Delete transients
+delete_transient('ccgw_currencies');
 
-// If HPOS is enabled, also clean from orders table
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}wc_orders_meta'") === $wpdb->prefix . 'wc_orders_meta') {
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-    $wpdb->query("DELETE FROM {$wpdb->prefix}wc_orders_meta WHERE meta_key LIKE '_oxprocessing_%'");
-}
+// 4. Delete order meta (HPOS-compatible via wc_get_orders + delete_meta_data)
+$meta_keys = array(
+    '_ccgw_payment_id',
+    '_ccgw_currency',
+    '_ccgw_redirect_url',
+    '_ccgw_payment_status',
+    '_ccgw_amount_paid',
+    '_ccgw_amount_usd',
+    '_ccgw_tx_hash',
+    '_ccgw_amount_received',
+);
 
-// Clear any scheduled hooks (in case we add cron jobs later)
-wp_clear_scheduled_hook('oxprocessing_cleanup_old_payments');
+// Process in batches to avoid memory issues on large stores
+$page = 1;
+$batch_size = 100;
+
+do {
+    $orders = wc_get_orders(array(
+        'limit'          => $batch_size,
+        'page'           => $page,
+        'payment_method' => 'ccgw',
+    ));
+
+    foreach ($orders as $order) {
+        foreach ($meta_keys as $key) {
+            $order->delete_meta_data($key);
+        }
+        $order->save();
+    }
+
+    $page++;
+} while (count($orders) === $batch_size);

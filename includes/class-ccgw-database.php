@@ -1,14 +1,16 @@
 <?php
 /**
- * 0xProcessing Database Handler
+ * Cyphercodes Crypto Gateway — Database Handler
  * Manages custom database table for payment tracking
+ *
+ * @package CCGW
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-class WC_0xProcessing_Database {
+class CCGW_Database {
 
     /**
      * Table name
@@ -25,7 +27,7 @@ class WC_0xProcessing_Database {
      */
     public function __construct() {
         global $wpdb;
-        $this->table_name = $wpdb->prefix . 'oxprocessing_payments';
+        $this->table_name = $wpdb->prefix . 'ccgw_payments';
     }
 
     /**
@@ -60,12 +62,12 @@ class WC_0xProcessing_Database {
         dbDelta($sql);
 
         // Track database version
-        update_option('oxprocessing_db_version', self::DB_VERSION);
+        update_option('ccgw_db_version', self::DB_VERSION);
 
         // Log table creation
         if (defined('WP_DEBUG') && WP_DEBUG) {
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log('[0xProcessing] Database table created/updated: ' . $this->table_name);
+            error_log('[CCGW] Database table created/updated: ' . $this->table_name);
         }
     }
 
@@ -75,7 +77,7 @@ class WC_0xProcessing_Database {
      * @return bool
      */
     public function needs_upgrade() {
-        $installed_version = get_option('oxprocessing_db_version', '0');
+        $installed_version = get_option('ccgw_db_version', '0');
         return version_compare($installed_version, self::DB_VERSION, '<');
     }
 
@@ -129,7 +131,7 @@ class WC_0xProcessing_Database {
         if ($result === false) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log('[0xProcessing] Database insert error: ' . $wpdb->last_error);
+                error_log('[CCGW] Database insert error: ' . $wpdb->last_error);
             }
             return false;
         }
@@ -195,7 +197,7 @@ class WC_0xProcessing_Database {
 
         if ($result === false && defined('WP_DEBUG') && WP_DEBUG) {
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log('[0xProcessing] Database update error: ' . $wpdb->last_error);
+            error_log('[CCGW] Database update error: ' . $wpdb->last_error);
         }
 
         return $result !== false;
